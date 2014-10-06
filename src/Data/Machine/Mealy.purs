@@ -122,8 +122,8 @@ module Data.Machine.Mealy
                                   f (Emit a m')  = Emit (M.Just $ Tuple a m') (msplit m')
 
   interleave :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a -> MealyT f s a
-  interleave m1 m2 = mealy $ \s ->  let f Halt          = stepMealy s m2
-                                        f (Emit a m1')  = pure $ Emit a (interleave m2 m1)
+  interleave m1 m2 = mealy $ \s ->  let f Halt        = stepMealy s m2
+                                        f (Emit a m1) = pure $ Emit a (interleave m2 m1)
                                     in  stepMealy s m1 >>= f
                                      
   once :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a

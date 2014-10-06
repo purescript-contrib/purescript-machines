@@ -1,0 +1,12 @@
+{
+  "name": "purescript-machines",
+  "version": "0.1.0",
+  "description": "Mealy Machines in PureScript",
+  "license": "MIT",
+  "devDependencies": {
+    "gulp":             "^3.8.6",
+    "gulp-purescript":  "0.0.9",
+    "gulp-run":         "^1.6.4",
+    "run-sequence":     "^0.3.6"
+  }
+}

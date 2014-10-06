@@ -1,0 +1,20 @@
+{
+  "name": "purescript-machines",
+  "version": "0.1.0",
+  "description": "Mealy Machines in PureScript",
+  "authors": [
+    "John A. De Goes <john@degoes.net>"
+  ],
+  "repository": {
+    "type": "git",
+    "url":  "git@github.com:purescript-contrib/purescript-machines.git"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "purescript-profunctor":  "~0.0.1",
+    "purescript-monoid":      "~0.1.4",
+    "purescript-arrays":      "~0.2.1",
+    "purescript-arrows":      "~0.1.1",
+    "purescript-tuples":      "~0.2.1"
+  }
+}

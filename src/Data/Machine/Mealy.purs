@@ -16,17 +16,30 @@ module Data.Machine.Mealy
   , zipWith
   , scanl
   , collect
+  , singleton
+  , fromMaybe
+  , fromArray
+  , msplit
+  , interleave
+  , (>>-)
+  , ifte
   ) where
 
   import Data.Tuple
   import Data.Profunctor
   import Data.Foldable
   import Data.Traversable
+  import Data.Tuple
   import Data.Monoid
+  import qualified Data.Maybe as M
   import qualified Data.Array as A
   import Control.Arrow
   import Control.Monad
   import Control.Bind
+  import Control.Plus
+  import Control.Alt
+  import Control.Alternative
+  import Control.MonadPlus
 
   data MealyT f s a = MealyT (f (s -> f (Step f s a)))
 
@@ -88,10 +101,50 @@ module Data.Machine.Mealy
   collect :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s [a]
   collect = scanl (flip (:)) []
 
+  singleton :: forall f s a. (Monad f) => a -> MealyT f s a 
+  singleton a = pureMealy $ \s -> Emit a halt
+
+  fromMaybe :: forall f s a. (Monad f) => M.Maybe a -> MealyT f s a 
+  fromMaybe M.Nothing  = halt
+  fromMaybe (M.Just a) = singleton a
+
+  fromArray :: forall f s a. (Monad f) => [a] -> MealyT f s a
+  fromArray a = let len = A.length a 
+
+                    loop n | n < 0 || n >= len = halt
+                    loop n                     = (fromMaybe $ a A.!! n) <> (loop $ n + 1)
+                in  loop 0
+
+  -- MonadLogic -- TODO: Create a purescript-logic package
+  msplit :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s (M.Maybe (Tuple a (MealyT f s a)))
+  msplit m = mealy $ \s ->  f <$> stepMealy s m
+                            where f Halt         = Emit (M.Nothing) halt
+                                  f (Emit a m')  = Emit (M.Just $ Tuple a m') (msplit m')
+
+  interleave :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a -> MealyT f s a
+  interleave m1 m2 = mealy $ \s ->  let f Halt          = stepMealy s m2
+                                        f (Emit a m1')  = pure $ Emit a (interleave m2 m1)
+                                    in  stepMealy s m1 >>= f
+                                     
+  once :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a
+  once = take 1
+
+  ifte :: forall f s a b. (Monad f) => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b -> MealyT f s b
+  ifte ma f mb = mealy $ \s ->  let g Halt        = stepMealy s mb
+                                    g (Emit a ma) = h ma <$> stepMealy s (f a)
+
+                                    h ma Halt        = Halt
+                                    h ma (Emit b fb) = Emit b (fb <> ifte ma f mb)
+
+                                in  stepMealy s ma >>= g
+
+  (>>-) :: forall f s a b. (Monad f) => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b
+  (>>-) ma f = ifte ma f halt
+
   instance functorMealy :: (Monad f) => Functor (MealyT f s) where
     (<$>) f m = mealy $ \s -> g <$> stepMealy s m where
       g (Emit a m') = Emit (f a) (f <$> m')
-      g Halt = Halt
+      g Halt        = Halt
 
   instance applyMealy :: (Monad f) => Apply (MealyT f s) where
     (<*>) f x = mealy $ \s -> let ap Halt _ = Halt
@@ -145,3 +198,14 @@ module Data.Machine.Mealy
 
   instance monadMealy :: (Monad f) => Monad (MealyT f s)
                                   
+  instance altMealy :: (Monad f) => Alt (MealyT f s) where
+    (<|>) x y = mealy $ \s -> let f Halt         = stepMealy s y
+                                  f (Emit a m')  = pure $ Emit a m'
+                              in  stepMealy s x >>= f 
+
+  instance plusMealy :: (Monad f) => Plus (MealyT f s) where
+    empty = halt
+
+  instance alternativeMealy :: (Monad f) => Alternative (MealyT f s)
+
+  instance monadPlus :: (Monad f) => MonadPlus (MealyT f s)

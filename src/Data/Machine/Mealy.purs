@@ -153,7 +153,7 @@ module Data.Machine.Mealy
                               in  ap <$> stepMealy s f <*> stepMealy s x
 
   instance applicativeMealy :: (Monad f) => Applicative (MealyT f s) where
-    pure t = pureMealy $ \s -> Emit t (pure t)
+    pure t = pureMealy $ \s -> Emit t halt
 
   instance profunctorMealy :: (Monad f) => Profunctor (MealyT f) where
     dimap l r = remap where
@@ -181,7 +181,7 @@ module Data.Machine.Mealy
     id = pureMealy $ \t -> Emit t id
 
   instance arrowMealy :: (Monad f) => Arrow (MealyT f) where
-    arr f = loop where loop = pureMealy $ \b -> Emit (f b) loop
+    arr f = pureMealy $ \b -> Emit (f b) halt
 
     first m = mealy $ \s -> let b = fst s
                                 d = snd s

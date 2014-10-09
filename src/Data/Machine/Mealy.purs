@@ -87,7 +87,7 @@ module Data.Machine.Mealy
   loop m = 
     let m0 = m 
 
-        loop' m = mealy $ \s -> let f Halt       = stepMealy s m0
+        loop' m = mealy $ \s -> let f Halt       = stepMealy s (loop m0)
                                     f (Emit a m) = pure $ Emit a (loop' m)
                                 in  stepMealy s m >>= f
     in  loop' m

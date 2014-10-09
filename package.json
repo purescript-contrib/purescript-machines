@@ -1,6 +1,6 @@
 {
   "name": "purescript-machines",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Mealy Machines in PureScript",
   "license": "MIT",
   "devDependencies": {

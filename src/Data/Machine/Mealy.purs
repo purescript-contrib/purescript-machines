@@ -84,10 +84,14 @@ module Data.Machine.Mealy
                                   in  stepMealy s m >>= f 
 
   loop :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a
-  loop m = loop' m m where
-    loop' m0 m = mealy $ \s ->  let f Halt        = stepMealy s m0
-                                    f (Emit a m') = pure $ Emit a (loop' m0 m')
-                                in  stepMealy s m
+  loop m = 
+    let m0 = m 
+
+        loop' m = mealy $ \s -> let f Halt       = stepMealy s m0
+                                    f (Emit a m) = pure $ Emit a (loop' m)
+                                in  stepMealy s m >>= f
+    in  loop' m
+    
 
   zipWith :: forall f s a b c. (Monad f) => (a -> b -> c) -> MealyT f s a -> MealyT f s b -> MealyT f s c
   zipWith f a b = f <$> a <*> b

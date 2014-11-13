@@ -23,6 +23,7 @@ module Data.Machine.Mealy
   , interleave
   , (>>-)
   , ifte
+  , wrapEffect
   ) where
 
   import Data.Tuple
@@ -118,6 +119,9 @@ module Data.Machine.Mealy
                     loop n | n < 0 || n >= len = halt
                     loop n                     = (fromMaybe $ a A.!! n) <> (loop $ n + 1)
                 in  loop 0
+
+  wrapEffect :: forall f s a. (Monad f) => f a -> MealyT f s a
+  wrapEffect fa = MealyT <<< pure $ const (flip Emit halt <$> fa)
 
   -- MonadLogic -- TODO: Create a purescript-logic package
   msplit :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s (M.Maybe (Tuple a (MealyT f s a)))

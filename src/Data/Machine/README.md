@@ -89,6 +89,8 @@
 
     take :: forall f s a. (Monad f) => Number -> MealyT f s a -> MealyT f s a
 
+    wrapEffect :: forall f s a. (Monad f) => f a -> MealyT f s a
+
     zipWith :: forall f s a b c. (Monad f) => (a -> b -> c) -> MealyT f s a -> MealyT f s b -> MealyT f s c
 
 

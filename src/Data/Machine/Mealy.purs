@@ -184,6 +184,7 @@ module Data.Machine.Mealy
       where gb Halt = pure Halt
             gb (Emit c g') = fc <$> stepMealy c f where
               fc (Emit d f') = Emit d (f' <<< g')
+              fc Halt        = Halt
 
   instance categoryMealy :: (Monad f) => Category (MealyT f) where
     id = pureMealy $ \t -> Emit t id

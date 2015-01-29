@@ -28,6 +28,7 @@ module Data.Machine.Mealy
 
   import Data.Tuple
   import Data.Profunctor
+  import Data.Profunctor.Strong
   import Data.Tuple
   import Data.Monoid
   import qualified Data.Maybe as M
@@ -167,6 +168,14 @@ module Data.Machine.Mealy
                 g (Emit c m') = Emit (r c) (remap m')
                 g Halt        = Halt
 
+  instance strongMealy :: (Monad f) => Strong (MealyT f) where
+    first m = mealy $ \s -> let b = fst s
+                                d = snd s
+                                g (Emit c f') = Emit (Tuple c d) (first f')
+                                g Halt        = Halt
+                            in  g <$> stepMealy b m
+    second = dimap swap swap <<< first
+
   instance semigroupMealy :: (Monad f) => Semigroup (MealyT f s a) where
     (<>) l r = mealy $ \s ->  let g (Emit c l') = pure $ Emit c (l' <> r)
                                   g Halt        = stepMealy s r
@@ -189,12 +198,6 @@ module Data.Machine.Mealy
 
   instance arrowMealy :: (Monad f) => Arrow (MealyT f) where
     arr f = pureMealy $ \b -> Emit (f b) halt
-
-    first m = mealy $ \s -> let b = fst s
-                                d = snd s
-                                g (Emit c f') = Emit (Tuple c d) (first f')
-                                g Halt        = Halt
-                            in  g <$> stepMealy b m
 
   instance bindMealy :: (Monad f) => Bind (MealyT f s) where
     (>>=) m f = mealy $ \s -> let g (Emit a m') = h <$> stepMealy s (f a) where

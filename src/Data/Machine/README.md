@@ -48,6 +48,8 @@
 
     instance semigroupoidMealy :: (Monad f) => Semigroupoid (MealyT f)
 
+    instance strongMealy :: (Monad f) => Strong (MealyT f)
+
 
 ### Values
 

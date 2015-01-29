@@ -1,6 +1,5 @@
 {
   "name": "purescript-machines",
-  "version": "0.1.5",
   "description": "Mealy Machines in PureScript",
   "authors": [
     "John A. De Goes <john@degoes.net>"

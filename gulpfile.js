@@ -45,13 +45,13 @@ function compile (compiler, src, opts) {
 
 function docs (target) {
     return function() {
-        var docgen = purescript.docgen();
-        docgen.on('error', function(e) {
+        var pscDocs = purescript.pscDocs();
+        pscDocs.on('error', function(e) {
             console.error(e.message);
-            docgen.end();
+            pscDocs.end();
         });
         return gulp.src(paths.docs[target].src)
-            .pipe(docgen)
+            .pipe(pscDocs)
             .pipe(gulp.dest(paths.docs[target].dest));
     }
 }

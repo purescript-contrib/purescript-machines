@@ -6,15 +6,15 @@
   ],
   "repository": {
     "type": "git",
-    "url":  "git@github.com:purescript-contrib/purescript-machines.git"
+    "url": "git@github.com:purescript-contrib/purescript-machines.git"
   },
   "license": "MIT",
   "dependencies": {
-    "purescript-profunctor": "~0.1.0",
+    "purescript-maybe": "~0.2.2",
+    "purescript-profunctor": "~0.2.1",
     "purescript-monoid": "~0.2.0",
-    "purescript-arrays": "~0.3.0",
-    "purescript-arrows": "~0.3.0",
-    "purescript-tuples": "~0.3.0",
-    "purescript-maybe": "~0.2.1"
+    "purescript-arrays": "~0.3.6",
+    "purescript-arrows": "~0.4.0",
+    "purescript-tuples": "~0.3.4"
   }
 }

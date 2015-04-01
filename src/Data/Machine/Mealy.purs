@@ -196,8 +196,8 @@ module Data.Machine.Mealy
   instance categoryMealy :: (Monad f) => Category (MealyT f) where
     id = pureMealy $ \t -> Emit t id
 
-  instance arrowMealy :: (Monad f) => Arrow (MealyT f) where
-    arr f = pureMealy $ \b -> Emit (f b) halt
+  instance arrowMealy :: (Monad f) => Arrow (MealyT f) 
+
 
   instance bindMealy :: (Monad f) => Bind (MealyT f s) where
     (>>=) m f = mealy $ \s -> let g (Emit a m') = h <$> stepMealy s (f a) where

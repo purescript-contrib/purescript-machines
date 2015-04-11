@@ -1,5 +1,5 @@
 module Data.Machine.Mealy
-  ( MealyT(..) -- FIXME: bug in purescript externs
+  ( MealyT()
   , Step(..)
   , Source()
   , Sink()
@@ -26,22 +26,20 @@ module Data.Machine.Mealy
   , wrapEffect
   ) where
 
-  import Data.Tuple
-  import Data.Profunctor
-  import Data.Profunctor.Strong
-  import Data.Tuple
-  import Data.Monoid
-  import qualified Data.Maybe as M
-  import qualified Data.Array as A
-  import Control.Arrow
-  import Control.Monad
-  import Control.Bind
-  import Control.Plus
-  import Control.Alt
-  import Control.Alternative
-  import Control.MonadPlus
+  import Control.Alt (Alt)
+  import Control.Alternative (Alternative)
+  import Control.Arrow (Arrow)
+  import Control.Bind (join)
+  import Control.MonadPlus (MonadPlus)
+  import Control.Plus (Plus)
+  import Data.Array ((!!), length)
+  import Data.Maybe (Maybe(..))
+  import Data.Monoid (Monoid)
+  import Data.Profunctor (Profunctor, dimap)
+  import Data.Profunctor.Strong (Strong, first)
+  import Data.Tuple (Tuple(..), fst, snd, swap)
 
-  data MealyT f s a = MealyT (f (s -> f (Step f s a)))
+  newtype MealyT f s a = MealyT (f (s -> f (Step f s a)))
 
   data Step f s a = Emit a (MealyT f s a) | Halt
 
@@ -108,25 +106,24 @@ module Data.Machine.Mealy
   singleton :: forall f s a. (Monad f) => a -> MealyT f s a
   singleton a = pureMealy $ \s -> Emit a halt
 
-  fromMaybe :: forall f s a. (Monad f) => M.Maybe a -> MealyT f s a
-  fromMaybe M.Nothing  = halt
-  fromMaybe (M.Just a) = singleton a
+  fromMaybe :: forall f s a. (Monad f) => Maybe a -> MealyT f s a
+  fromMaybe Nothing  = halt
+  fromMaybe (Just a) = singleton a
 
   fromArray :: forall f s a. (Monad f) => [a] -> MealyT f s a
-  fromArray a = let len = A.length a
-
-                    loop n | n < 0 || n >= len = halt
-                    loop n                     = (fromMaybe $ a A.!! n) <> (loop $ n + 1)
-                in  loop 0
+  fromArray a = let len = length a
+                    loop n | n < zero || n >= len = halt
+                    loop n                        = (fromMaybe $ a !! n) <> (loop $ n + one)
+                in  loop zero
 
   wrapEffect :: forall f s a. (Monad f) => f a -> MealyT f s a
   wrapEffect fa = MealyT <<< pure $ const (flip Emit halt <$> fa)
 
   -- MonadLogic -- TODO: Create a purescript-logic package
-  msplit :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s (M.Maybe (Tuple a (MealyT f s a)))
+  msplit :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s (Maybe (Tuple a (MealyT f s a)))
   msplit m = mealy $ \s ->  f <$> stepMealy s m
-                            where f Halt         = Emit (M.Nothing) halt
-                                  f (Emit a m')  = Emit (M.Just $ Tuple a m') (msplit m')
+                            where f Halt         = Emit (Nothing) halt
+                                  f (Emit a m')  = Emit (Just $ Tuple a m') (msplit m')
 
   interleave :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a -> MealyT f s a
   interleave m1 m2 = mealy $ \s ->  let f Halt        = stepMealy s m2
@@ -196,8 +193,7 @@ module Data.Machine.Mealy
   instance categoryMealy :: (Monad f) => Category (MealyT f) where
     id = pureMealy $ \t -> Emit t id
 
-  instance arrowMealy :: (Monad f) => Arrow (MealyT f) 
-
+  instance arrowMealy :: (Monad f) => Arrow (MealyT f)
 
   instance bindMealy :: (Monad f) => Bind (MealyT f s) where
     (>>=) m f = mealy $ \s -> let g (Emit a m') = h <$> stepMealy s (f a) where

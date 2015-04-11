@@ -5,8 +5,7 @@
 #### `MealyT`
 
 ``` purescript
-data MealyT f s a
-  = MealyT (f (s -> f (Step f s a)))
+newtype MealyT f s a
 ```
 
 
@@ -134,7 +133,7 @@ singleton :: forall f s a. (Monad f) => a -> MealyT f s a
 #### `fromMaybe`
 
 ``` purescript
-fromMaybe :: forall f s a. (Monad f) => M.Maybe a -> MealyT f s a
+fromMaybe :: forall f s a. (Monad f) => Maybe a -> MealyT f s a
 ```
 
 
@@ -155,7 +154,7 @@ wrapEffect :: forall f s a. (Monad f) => f a -> MealyT f s a
 #### `msplit`
 
 ``` purescript
-msplit :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s (M.Maybe (Tuple a (MealyT f s a)))
+msplit :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s (Maybe (Tuple a (MealyT f s a)))
 ```
 
 #### `interleave`

@@ -191,7 +191,7 @@ module Data.Machine.Mealy
               fc Halt        = Halt
 
   instance categoryMealy :: (Monad f) => Category (MealyT f) where
-    id = pureMealy $ \t -> Emit t id
+    id = pureMealy $ \t -> Emit t halt
 
   instance arrowMealy :: (Monad f) => Arrow (MealyT f)
 

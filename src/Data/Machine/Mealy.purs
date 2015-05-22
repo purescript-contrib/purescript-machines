@@ -32,6 +32,7 @@ module Data.Machine.Mealy
   import Control.Bind (join)
   import Control.MonadPlus (MonadPlus)
   import Control.Plus (Plus)
+  import Control.Monad.Eff.Class (MonadEff, liftEff)
   import Data.Array ((!!), length)
   import Data.Maybe (Maybe(..))
   import Data.Monoid (Monoid)
@@ -215,3 +216,6 @@ module Data.Machine.Mealy
   instance alternativeMealy :: (Monad f) => Alternative (MealyT f s)
 
   instance monadPlus :: (Monad f) => MonadPlus (MealyT f s)
+
+  instance monadEffMealy :: (Monad f, MonadEff eff f) => MonadEff eff (MealyT f s) where
+    liftEff = wrapEffect <<< liftEff

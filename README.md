@@ -14,4 +14,4 @@ bower i purescript-machines
 
 ## Documentation
 
-API docs can be found [here](src/Data/Machine/README.md).
+API docs can be found [here](docs/Data/Machine/Mealy.md).

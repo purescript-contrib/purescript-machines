@@ -1,5 +1,3 @@
-# Module Documentation
-
 ## Module Data.Machine.Mealy
 
 #### `MealyT`
@@ -8,15 +6,34 @@
 newtype MealyT f s a
 ```
 
+##### Instances
+``` purescript
+instance functorMealy :: (Monad f) => Functor (MealyT f s)
+instance applyMealy :: (Monad f) => Apply (MealyT f s)
+instance applicativeMealy :: (Monad f) => Applicative (MealyT f s)
+instance profunctorMealy :: (Monad f) => Profunctor (MealyT f)
+instance strongMealy :: (Monad f) => Strong (MealyT f)
+instance semigroupMealy :: (Monad f) => Semigroup (MealyT f s a)
+instance monoidMealy :: (Monad f) => Monoid (MealyT f s a)
+instance semigroupoidMealy :: (Monad f) => Semigroupoid (MealyT f)
+instance categoryMealy :: (Monad f) => Category (MealyT f)
+instance arrowMealy :: (Monad f) => Arrow (MealyT f)
+instance bindMealy :: (Monad f) => Bind (MealyT f s)
+instance monadMealy :: (Monad f) => Monad (MealyT f s)
+instance altMealy :: (Monad f) => Alt (MealyT f s)
+instance plusMealy :: (Monad f) => Plus (MealyT f s)
+instance alternativeMealy :: (Monad f) => Alternative (MealyT f s)
+instance monadPlus :: (Monad f) => MonadPlus (MealyT f s)
+instance monadEffMealy :: (Monad f, MonadEff eff f) => MonadEff eff (MealyT f s)
+```
 
 #### `Step`
 
 ``` purescript
 data Step f s a
   = Emit a (MealyT f s a)
-  | Halt 
+  | Halt
 ```
-
 
 #### `Source`
 
@@ -24,13 +41,11 @@ data Step f s a
 type Source f s = MealyT f Unit s
 ```
 
-
 #### `Sink`
 
 ``` purescript
 type Sink f a = MealyT f a Unit
 ```
-
 
 #### `source`
 
@@ -38,13 +53,11 @@ type Sink f a = MealyT f a Unit
 source :: forall f s. (Monad f) => f s -> Source f s
 ```
 
-
 #### `sink`
 
 ``` purescript
 sink :: forall f a. (Monad f) => (a -> f Unit) -> Sink f a
 ```
-
 
 #### `runMealy`
 
@@ -52,13 +65,11 @@ sink :: forall f a. (Monad f) => (a -> f Unit) -> Sink f a
 runMealy :: forall f. (Monad f) => MealyT f Unit Unit -> f Unit
 ```
 
-
 #### `stepMealy`
 
 ``` purescript
 stepMealy :: forall f s a. (Monad f) => s -> MealyT f s a -> f (Step f s a)
 ```
-
 
 #### `pureMealy`
 
@@ -66,13 +77,11 @@ stepMealy :: forall f s a. (Monad f) => s -> MealyT f s a -> f (Step f s a)
 pureMealy :: forall f s a. (Applicative f) => (s -> Step f s a) -> MealyT f s a
 ```
 
-
 #### `mealy`
 
 ``` purescript
 mealy :: forall f s a. (Applicative f) => (s -> f (Step f s a)) -> MealyT f s a
 ```
-
 
 #### `halt`
 
@@ -80,20 +89,17 @@ mealy :: forall f s a. (Applicative f) => (s -> f (Step f s a)) -> MealyT f s a
 halt :: forall f s a. (Applicative f) => MealyT f s a
 ```
 
-
 #### `take`
 
 ``` purescript
-take :: forall f s a. (Monad f) => Number -> MealyT f s a -> MealyT f s a
+take :: forall f s a. (Monad f) => Int -> MealyT f s a -> MealyT f s a
 ```
-
 
 #### `drop`
 
 ``` purescript
-drop :: forall f s a. (Monad f) => Number -> MealyT f s a -> MealyT f s a
+drop :: forall f s a. (Monad f) => Int -> MealyT f s a -> MealyT f s a
 ```
-
 
 #### `loop`
 
@@ -101,13 +107,11 @@ drop :: forall f s a. (Monad f) => Number -> MealyT f s a -> MealyT f s a
 loop :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a
 ```
 
-
 #### `zipWith`
 
 ``` purescript
 zipWith :: forall f s a b c. (Monad f) => (a -> b -> c) -> MealyT f s a -> MealyT f s b -> MealyT f s c
 ```
-
 
 #### `scanl`
 
@@ -115,13 +119,11 @@ zipWith :: forall f s a b c. (Monad f) => (a -> b -> c) -> MealyT f s a -> Mealy
 scanl :: forall f s a b. (Monad f) => (b -> a -> b) -> b -> MealyT f s a -> MealyT f s b
 ```
 
-
 #### `collect`
 
 ``` purescript
-collect :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s [a]
+collect :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s (List a)
 ```
-
 
 #### `singleton`
 
@@ -129,27 +131,23 @@ collect :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s [a]
 singleton :: forall f s a. (Monad f) => a -> MealyT f s a
 ```
 
-
 #### `fromMaybe`
 
 ``` purescript
 fromMaybe :: forall f s a. (Monad f) => Maybe a -> MealyT f s a
 ```
 
-
 #### `fromArray`
 
 ``` purescript
-fromArray :: forall f s a. (Monad f) => [a] -> MealyT f s a
+fromArray :: forall f s a. (Monad f) => Array a -> MealyT f s a
 ```
-
 
 #### `wrapEffect`
 
 ``` purescript
 wrapEffect :: forall f s a. (Monad f) => f a -> MealyT f s a
 ```
-
 
 #### `msplit`
 
@@ -163,13 +161,11 @@ msplit :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s (Maybe (Tuple a 
 interleave :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a -> MealyT f s a
 ```
 
-
 #### `ifte`
 
 ``` purescript
 ifte :: forall f s a b. (Monad f) => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b -> MealyT f s b
 ```
-
 
 #### `(>>-)`
 
@@ -177,118 +173,6 @@ ifte :: forall f s a b. (Monad f) => MealyT f s a -> (a -> MealyT f s b) -> Meal
 (>>-) :: forall f s a b. (Monad f) => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b
 ```
 
-
-#### `functorMealy`
-
-``` purescript
-instance functorMealy :: (Monad f) => Functor (MealyT f s)
-```
-
-
-#### `applyMealy`
-
-``` purescript
-instance applyMealy :: (Monad f) => Apply (MealyT f s)
-```
-
-
-#### `applicativeMealy`
-
-``` purescript
-instance applicativeMealy :: (Monad f) => Applicative (MealyT f s)
-```
-
-
-#### `profunctorMealy`
-
-``` purescript
-instance profunctorMealy :: (Monad f) => Profunctor (MealyT f)
-```
-
-
-#### `strongMealy`
-
-``` purescript
-instance strongMealy :: (Monad f) => Strong (MealyT f)
-```
-
-
-#### `semigroupMealy`
-
-``` purescript
-instance semigroupMealy :: (Monad f) => Semigroup (MealyT f s a)
-```
-
-
-#### `monoidMealy`
-
-``` purescript
-instance monoidMealy :: (Monad f) => Monoid (MealyT f s a)
-```
-
-
-#### `semigroupoidMealy`
-
-``` purescript
-instance semigroupoidMealy :: (Monad f) => Semigroupoid (MealyT f)
-```
-
-
-#### `categoryMealy`
-
-``` purescript
-instance categoryMealy :: (Monad f) => Category (MealyT f)
-```
-
-
-#### `arrowMealy`
-
-``` purescript
-instance arrowMealy :: (Monad f) => Arrow (MealyT f)
-```
-
-
-#### `bindMealy`
-
-``` purescript
-instance bindMealy :: (Monad f) => Bind (MealyT f s)
-```
-
-
-#### `monadMealy`
-
-``` purescript
-instance monadMealy :: (Monad f) => Monad (MealyT f s)
-```
-
-
-#### `altMealy`
-
-``` purescript
-instance altMealy :: (Monad f) => Alt (MealyT f s)
-```
-
-
-#### `plusMealy`
-
-``` purescript
-instance plusMealy :: (Monad f) => Plus (MealyT f s)
-```
-
-
-#### `alternativeMealy`
-
-``` purescript
-instance alternativeMealy :: (Monad f) => Alternative (MealyT f s)
-```
-
-
-#### `monadPlus`
-
-``` purescript
-instance monadPlus :: (Monad f) => MonadPlus (MealyT f s)
-```
-
-
+_left-associative / precedence -1_
 
 

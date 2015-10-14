@@ -3,6 +3,7 @@
   "description": "Mealy Machines in PureScript",
   "license": "MIT",
   "devDependencies": {
-    "pulp": "~3.2.2"
+    "pulp": "^4.4.0",
+    "purescript": "^0.7.4"
   }
 }

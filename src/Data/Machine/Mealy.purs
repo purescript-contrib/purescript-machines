@@ -26,7 +26,7 @@ module Data.Machine.Mealy
   , wrapEffect
   ) where
 
-import Prelude 
+import Prelude
 import Control.Alt (Alt)
 import Control.Alternative (Alternative)
 import Control.Arrow (Arrow)
@@ -97,10 +97,10 @@ zipWith :: forall f s a b c. (Monad f) => (a -> b -> c) -> MealyT f s a -> Mealy
 zipWith f a b = f <$> a <*> b
 
 scanl :: forall f s a b. (Monad f) => (b -> a -> b) -> b -> MealyT f s a -> MealyT f s b
-scanl f = loop where
-    loop b m = mealy $ \s ->  let g Halt        = Halt
-                                  g (Emit a m') = (let b' = f b a in Emit b' (loop b' m'))
-                              in g <$> stepMealy s m
+scanl f = go where
+    go b m = mealy $ \s ->  let g Halt        = Halt
+                                g (Emit a m') = (let b' = f b a in Emit b' (go b' m'))
+                             in g <$> stepMealy s m
 
 collect :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s (List a)
 collect = scanl (flip Cons) Nil
@@ -114,9 +114,9 @@ fromMaybe (Just a) = singleton a
 
 fromArray :: forall f s a. (Monad f) => Array a -> MealyT f s a
 fromArray a = let len = length a
-                  loop n | n < zero || n >= len = halt
-                  loop n                        = (fromMaybe $ a !! n) <> (loop $ n + one)
-              in  loop zero
+                  go n | n < zero || n >= len = halt
+                  go n                        = fromMaybe (a !! n) <> go (n + one)
+              in  go zero
 
 wrapEffect :: forall f s a. (Monad f) => f a -> MealyT f s a
 wrapEffect fa = MealyT <<< pure $ const (flip Emit halt <$> fa)

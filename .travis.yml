@@ -1,0 +1,10 @@
+language: node_js
+sudo: false
+node_js:
+  - 0.12.7
+install:
+  - npm install bower -g
+  - npm install
+  - bower install
+script:
+  - pulp build

@@ -1,5 +1,6 @@
 module Data.Machine.Mealy
   ( MealyT()
+  , runMealyT
   , Step(..)
   , Source()
   , Sink()
@@ -31,6 +32,7 @@ import Control.Alt (Alt)
 import Control.Alternative (Alternative)
 import Control.Arrow (Arrow)
 import Control.Bind (join)
+import Control.Lazy (Lazy)
 import Control.MonadPlus (MonadPlus)
 import Control.Plus (Plus)
 import Control.Monad.Eff.Class (MonadEff, liftEff)
@@ -43,6 +45,9 @@ import Data.Profunctor.Strong (Strong, first)
 import Data.Tuple (Tuple(..), fst, snd, swap)
 
 newtype MealyT f s a = MealyT (f (s -> f (Step f s a)))
+
+runMealyT :: forall f s a. MealyT f s a -> f (s -> f (Step f s a))
+runMealyT (MealyT f) = f
 
 data Step f s a = Emit a (MealyT f s a) | Halt
 
@@ -221,3 +226,6 @@ instance monadPlus :: (Monad f) => MonadPlus (MealyT f s)
 
 instance monadEffMealy :: (Monad f, MonadEff eff f) => MonadEff eff (MealyT f s) where
   liftEff = wrapEffect <<< liftEff
+
+instance lazyMealy :: (Monad f) => Lazy (MealyT f s a) where
+  defer f = mealy \s -> runMealyT (f unit) >>= ($ s)

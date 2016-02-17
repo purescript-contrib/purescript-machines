@@ -22,26 +22,26 @@ module Data.Machine.Mealy
   , fromArray
   , msplit
   , interleave
-  , (>>-)
+  , (>>-), haltIfNotExists
   , ifte
   , wrapEffect
   ) where
 
-import Prelude
-import Control.Alt (Alt)
-import Control.Alternative (Alternative)
-import Control.Arrow (Arrow)
+import Prelude (class Monad, class Bind, class Category, class Semigroupoid, class Semigroup, class Applicative, class Apply, class Functor, Unit, ($), unit, (>>=), (<<<), pure, (<$>), (<>), (<*>), flip, const, zero, one, (+), (>=), (||), (<), (-), (<=))
+import Control.Alt (class Alt)
+import Control.Alternative (class Alternative)
+import Control.Arrow (class Arrow)
 import Control.Bind (join)
-import Control.Lazy (Lazy)
-import Control.MonadPlus (MonadPlus)
-import Control.Plus (Plus)
-import Control.Monad.Eff.Class (MonadEff, liftEff)
+import Control.Lazy (class Lazy)
+import Control.MonadPlus (class MonadPlus)
+import Control.Plus (class Plus)
+import Control.Monad.Eff.Class (class MonadEff, liftEff)
 import Data.Array ((!!), length)
 import Data.List (List(..))
 import Data.Maybe (Maybe(..))
-import Data.Monoid (Monoid)
-import Data.Profunctor (Profunctor, dimap)
-import Data.Profunctor.Strong (Strong, first)
+import Data.Monoid (class Monoid)
+import Data.Profunctor (class Profunctor, dimap)
+import Data.Profunctor.Strong (class Strong, first)
 import Data.Tuple (Tuple(..), fst, snd, swap)
 
 newtype MealyT f s a = MealyT (f (s -> f (Step f s a)))
@@ -149,8 +149,11 @@ ifte ma f mb = mealy $ \s ->  let g Halt        = stepMealy s mb
 
                               in  stepMealy s ma >>= g
 
-(>>-) :: forall f s a b. (Monad f) => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b
-(>>-) ma f = ifte ma f halt
+
+haltIfNotExists :: forall f s a b. (Monad f) => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b
+haltIfNotExists ma f = ifte ma f halt
+
+infix 2 haltIfNotExists as >>-
 
 instance functorMealy :: (Monad f) => Functor (MealyT f s) where
   map f m = mealy $ \s -> g <$> stepMealy s m where

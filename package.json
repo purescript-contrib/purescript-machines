@@ -1,9 +1,12 @@
 {
-  "name": "purescript-machines",
-  "description": "Mealy Machines in PureScript",
-  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "clean": "rimraf output && rimraf .pulp-cache",
+    "build": "psa \"src/**/*.purs\" \"bower_components/purescript-*/src/**/*.purs\" --censor-lib --strict"
+  },
   "devDependencies": {
-    "pulp": "^4.4.0",
-    "purescript": "^0.7.4"
+    "purescript-psa": "^0.3.8",
+    "purescript": "^0.9.1-rc.1",
+    "rimraf": "^2.5.0"
   }
 }

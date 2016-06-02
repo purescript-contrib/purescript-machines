@@ -1,12 +1,11 @@
-# PureScript-Machines
+# purescript-machines
 
-This library helps you build finite state machines. Currently, there's an implementation for mealy machines with halting.
+[![Latest release](http://img.shields.io/bower/v/purescript-machines.svg)](https://github.com/purescript-contrib/purescript-machines/releases)
+[![Build Status](https://travis-ci.org/purescript-contrib/purescript-machines.svg?branch=master)](https://travis-ci.org/purescript-contrib/purescript-machines)
 
-**Note**: If you need the ability to produce errors, consume from multiple input tapes, or guarantee resource cleanup, you should probably be using [PureScript Streams](http://github.com/purescript-contrib/purescript-streams) instead.
+This library helps you build finite state machines. Currently, there's an implementation for Mealy machines with halting.
 
 ## Installation
-
-This can be installed with Bower:
 
 ```shell
 bower i purescript-machines
@@ -14,4 +13,4 @@ bower i purescript-machines
 
 ## Documentation
 
-API docs can be found [here](docs/Data/Machine/Mealy.md).
+Module documentation is [published on Pursuit](http://pursuit.purescript.org/packages/purescript-machines).

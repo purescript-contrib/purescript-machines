@@ -1,9 +1,9 @@
 module Data.Machine.Mealy
-  ( MealyT()
+  ( MealyT
   , runMealyT
   , Step(..)
-  , Source()
-  , Sink()
+  , Source
+  , Sink
   , source
   , sink
   , stepMealy
@@ -22,26 +22,27 @@ module Data.Machine.Mealy
   , fromArray
   , msplit
   , interleave
-  , (>>-)
+  , when
   , ifte
   , wrapEffect
   ) where
 
 import Prelude
-import Control.Alt (Alt)
-import Control.Alternative (Alternative)
-import Control.Arrow (Arrow)
-import Control.Bind (join)
-import Control.Lazy (Lazy)
-import Control.MonadPlus (MonadPlus)
-import Control.Plus (Plus)
-import Control.Monad.Eff.Class (MonadEff, liftEff)
+
+import Control.Alt (class Alt)
+import Control.Alternative (class Alternative)
+import Control.Lazy (class Lazy)
+import Control.Monad.Eff.Class (class MonadEff, liftEff)
+import Control.MonadPlus (class MonadPlus)
+import Control.MonadZero (class MonadZero)
+import Control.Plus (class Plus)
+
 import Data.Array ((!!), length)
 import Data.List (List(..))
 import Data.Maybe (Maybe(..))
-import Data.Monoid (Monoid)
-import Data.Profunctor (Profunctor, dimap)
-import Data.Profunctor.Strong (Strong, first)
+import Data.Monoid (class Monoid)
+import Data.Profunctor (class Profunctor, dimap)
+import Data.Profunctor.Strong (class Strong, first)
 import Data.Tuple (Tuple(..), fst, snd, swap)
 
 newtype MealyT f s a = MealyT (f (s -> f (Step f s a)))
@@ -149,8 +150,8 @@ ifte ma f mb = mealy $ \s ->  let g Halt        = stepMealy s mb
 
                               in  stepMealy s ma >>= g
 
-(>>-) :: forall f s a b. (Monad f) => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b
-(>>-) ma f = ifte ma f halt
+when :: forall f s a b. (Monad f) => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b
+when ma f = ifte ma f halt
 
 instance functorMealy :: (Monad f) => Functor (MealyT f s) where
   map f m = mealy $ \s -> g <$> stepMealy s m where
@@ -200,8 +201,6 @@ instance semigroupoidMealy :: (Monad f) => Semigroupoid (MealyT f) where
 instance categoryMealy :: (Monad f) => Category (MealyT f) where
   id = pureMealy $ \t -> Emit t halt
 
-instance arrowMealy :: (Monad f) => Arrow (MealyT f)
-
 instance bindMealy :: (Monad f) => Bind (MealyT f s) where
   bind m f = mealy $ \s -> let g (Emit a m') = h <$> stepMealy s (f a)
                                  where
@@ -222,10 +221,12 @@ instance plusMealy :: (Monad f) => Plus (MealyT f s) where
 
 instance alternativeMealy :: (Monad f) => Alternative (MealyT f s)
 
+instance monadZero :: (Monad f) => MonadZero (MealyT f s)
+
 instance monadPlus :: (Monad f) => MonadPlus (MealyT f s)
 
 instance monadEffMealy :: (Monad f, MonadEff eff f) => MonadEff eff (MealyT f s) where
   liftEff = wrapEffect <<< liftEff
 
 instance lazyMealy :: (Monad f) => Lazy (MealyT f s a) where
-  defer f = mealy \s -> runMealyT (f unit) >>= ($ s)
+  defer f = mealy \s -> runMealyT (f unit) >>= (_ $ s)

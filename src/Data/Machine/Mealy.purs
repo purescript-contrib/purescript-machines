@@ -91,13 +91,12 @@ drop n m  = if n <= 0 then m
                                   in  stepMealy s m >>= f
 
 loop :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a
-loop m =
-    let m0 = m
-        loop' m = mealy $ \s -> let f Halt       = stepMealy s (loop m0)
-                                    f (Emit a m) = pure $ Emit a (loop' m)
-                                in  stepMealy s m >>= f
-    in  loop' m
-
+loop m0 = loop' m0
+  where
+  loop' m = mealy $ \s ->
+    stepMealy s m >>= case _ of
+      Halt -> stepMealy s (loop m0)
+      Emit a m' -> pure $ Emit a (loop' m')
 
 zipWith :: forall f s a b c. (Monad f) => (a -> b -> c) -> MealyT f s a -> MealyT f s b -> MealyT f s c
 zipWith f a b = f <$> a <*> b
@@ -134,21 +133,23 @@ msplit m = mealy $ \s ->  f <$> stepMealy s m
         f (Emit a m')  = Emit (Just $ Tuple a m') (msplit m')
 
 interleave :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a -> MealyT f s a
-interleave m1 m2 = mealy $ \s ->  let f Halt        = stepMealy s m2
-                                      f (Emit a m1) = pure $ Emit a (interleave m2 m1)
-                                  in  stepMealy s m1 >>= f
+interleave m1 m2 = mealy $ \s ->
+  stepMealy s m1 >>= case _ of
+    Halt -> stepMealy s m2
+    Emit a m1' -> pure $ Emit a (interleave m2 m1')
 
 once :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a
 once = take 1
 
 ifte :: forall f s a b. (Monad f) => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b -> MealyT f s b
-ifte ma f mb = mealy $ \s ->  let g Halt        = stepMealy s mb
-                                  g (Emit a ma) = h ma <$> stepMealy s (f a)
-
-                                  h ma Halt        = Halt
-                                  h ma (Emit b fb) = Emit b (fb <> ifte ma f mb)
-
-                              in  stepMealy s ma >>= g
+ifte ma f mb = mealy $ \s ->
+  stepMealy s ma >>= case _ of
+    Halt -> stepMealy s mb
+    Emit a ma' -> go ma' <$> stepMealy s (f a)
+  where
+  go ma' = case _ of
+    Halt -> Halt
+    Emit b fb -> Emit b (fb <> ifte ma' f mb)
 
 when :: forall f s a b. (Monad f) => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b
 when ma f = ifte ma f halt
@@ -159,10 +160,11 @@ instance functorMealy :: (Monad f) => Functor (MealyT f s) where
     g Halt        = Halt
 
 instance applyMealy :: (Monad f) => Apply (MealyT f s) where
-  apply f x = mealy $ \s -> let ap Halt _ = Halt
-                                ap _ Halt = Halt
-                                ap (Emit f f') (Emit x x') = Emit (f x) (f' <*> x')
-                            in  ap <$> stepMealy s f <*> stepMealy s x
+  apply f x = mealy $ \s -> ap <$> stepMealy s f <*> stepMealy s x
+    where
+    ap Halt _ = Halt
+    ap _ Halt = Halt
+    ap (Emit f' g) (Emit x' y) = Emit (f' x') (g <*> y)
 
 instance applicativeMealy :: (Monad f) => Applicative (MealyT f s) where
   pure t = pureMealy $ \s -> Emit t halt

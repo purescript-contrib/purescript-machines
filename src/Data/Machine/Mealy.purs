@@ -45,9 +45,9 @@ import Data.Profunctor (class Profunctor, dimap)
 import Data.Profunctor.Strong (class Strong, first)
 import Data.Tuple (Tuple(..), fst, snd, swap)
 
-newtype MealyT f s a = MealyT (f (s -> f (Step f s a)))
+newtype MealyT f s a = MealyT (s -> f (Step f s a))
 
-runMealyT :: forall f s a. MealyT f s a -> f (s -> f (Step f s a))
+runMealyT :: forall f s a. MealyT f s a -> s -> f (Step f s a)
 runMealyT (MealyT f) = f
 
 data Step f s a = Emit a (MealyT f s a) | Halt
@@ -67,13 +67,13 @@ runMealy m = stepMealy unit m >>= f
                       f (Emit _ m') = runMealy m'
 
 stepMealy :: forall f s a. (Monad f) => s -> MealyT f s a -> f (Step f s a)
-stepMealy s (MealyT f) = join $ f <*> (pure s)
+stepMealy = flip runMealyT
 
 pureMealy :: forall f s a. (Applicative f) => (s -> Step f s a ) -> MealyT f s a
-pureMealy f = MealyT $ pure (\s -> pure $ f s)
+pureMealy = MealyT <<< map pure
 
 mealy :: forall f s a. (Applicative f) => (s -> f (Step f s a)) -> MealyT f s a
-mealy f = MealyT $ pure f
+mealy = MealyT
 
 halt :: forall f s a. (Applicative f) => MealyT f s a
 halt = pureMealy $ const Halt
@@ -124,7 +124,7 @@ fromArray a = let len = length a
               in  go zero
 
 wrapEffect :: forall f s a. (Monad f) => f a -> MealyT f s a
-wrapEffect fa = MealyT <<< pure $ const (flip Emit halt <$> fa)
+wrapEffect fa = MealyT $ const (flip Emit halt <$> fa)
 
 -- MonadLogic -- TODO: Create a purescript-logic package
 msplit :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s (Maybe (Tuple a (MealyT f s a)))
@@ -231,4 +231,4 @@ instance monadEffMealy :: (Monad f, MonadEff eff f) => MonadEff eff (MealyT f s)
   liftEff = wrapEffect <<< liftEff
 
 instance lazyMealy :: (Monad f) => Lazy (MealyT f s a) where
-  defer f = mealy \s -> runMealyT (f unit) >>= (_ $ s)
+  defer f = mealy \s -> runMealyT (f unit) s

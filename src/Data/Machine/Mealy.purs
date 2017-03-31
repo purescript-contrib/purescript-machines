@@ -55,42 +55,42 @@ data Step f s a = Emit a (MealyT f s a) | Halt
 type Source f s = MealyT f Unit s
 type Sink f a = MealyT f a Unit
 
-source :: forall f s. (Monad f) => f s -> Source f s
+source :: forall f s. Monad f => f s -> Source f s
 source src =  mealy $ \_ -> flip Emit (source src) <$> src
 
-sink :: forall f a. (Monad f) => (a -> f Unit) -> Sink f a
+sink :: forall f a. Monad f => (a -> f Unit) -> Sink f a
 sink f = mealy $ \a -> const (Emit unit (sink f)) <$> f a
 
-runMealy :: forall f. (Monad f) => MealyT f Unit Unit -> f Unit
+runMealy :: forall f. Monad f => MealyT f Unit Unit -> f Unit
 runMealy m = stepMealy unit m >>= f
                 where f Halt        = pure unit
                       f (Emit _ m') = runMealy m'
 
-stepMealy :: forall f s a. (Monad f) => s -> MealyT f s a -> f (Step f s a)
+stepMealy :: forall f s a. Monad f => s -> MealyT f s a -> f (Step f s a)
 stepMealy = flip runMealyT
 
-pureMealy :: forall f s a. (Applicative f) => (s -> Step f s a ) -> MealyT f s a
+pureMealy :: forall f s a. Applicative f => (s -> Step f s a ) -> MealyT f s a
 pureMealy = MealyT <<< map pure
 
-mealy :: forall f s a. (Applicative f) => (s -> f (Step f s a)) -> MealyT f s a
+mealy :: forall f s a. Applicative f => (s -> f (Step f s a)) -> MealyT f s a
 mealy = MealyT
 
-halt :: forall f s a. (Applicative f) => MealyT f s a
+halt :: forall f s a. Applicative f => MealyT f s a
 halt = pureMealy $ const Halt
 
-take :: forall f s a. (Monad f) => Int -> MealyT f s a -> MealyT f s a
+take :: forall f s a. Monad f => Int -> MealyT f s a -> MealyT f s a
 take n m  = if n <= 0 then halt
               else mealy $ \s ->  f <$> stepMealy s m
                                   where f Halt        = Halt
                                         f (Emit a m') = Emit a (take (n - 1) m')
 
-drop :: forall f s a. (Monad f) => Int -> MealyT f s a -> MealyT f s a
+drop :: forall f s a. Monad f => Int -> MealyT f s a -> MealyT f s a
 drop n m  = if n <= 0 then m
               else mealy $ \s ->  let f Halt        = pure Halt
                                       f (Emit a m') = stepMealy s (drop (n - 1) m')
                                   in  stepMealy s m >>= f
 
-loop :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a
+loop :: forall f s a. Monad f => MealyT f s a -> MealyT f s a
 loop m0 = loop' m0
   where
   loop' m = mealy $ \s ->
@@ -98,50 +98,50 @@ loop m0 = loop' m0
       Halt -> stepMealy s (loop m0)
       Emit a m' -> pure $ Emit a (loop' m')
 
-zipWith :: forall f s a b c. (Monad f) => (a -> b -> c) -> MealyT f s a -> MealyT f s b -> MealyT f s c
+zipWith :: forall f s a b c. Monad f => (a -> b -> c) -> MealyT f s a -> MealyT f s b -> MealyT f s c
 zipWith f a b = f <$> a <*> b
 
-scanl :: forall f s a b. (Monad f) => (b -> a -> b) -> b -> MealyT f s a -> MealyT f s b
+scanl :: forall f s a b. Monad f => (b -> a -> b) -> b -> MealyT f s a -> MealyT f s b
 scanl f = go where
     go b m = mealy $ \s ->  let g Halt        = Halt
                                 g (Emit a m') = (let b' = f b a in Emit b' (go b' m'))
                              in g <$> stepMealy s m
 
-collect :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s (List a)
+collect :: forall f s a. Monad f => MealyT f s a -> MealyT f s (List a)
 collect = scanl (flip Cons) Nil
 
-singleton :: forall f s a. (Monad f) => a -> MealyT f s a
+singleton :: forall f s a. Monad f => a -> MealyT f s a
 singleton a = pureMealy $ \s -> Emit a halt
 
-fromMaybe :: forall f s a. (Monad f) => Maybe a -> MealyT f s a
+fromMaybe :: forall f s a. Monad f => Maybe a -> MealyT f s a
 fromMaybe Nothing  = halt
 fromMaybe (Just a) = singleton a
 
-fromArray :: forall f s a. (Monad f) => Array a -> MealyT f s a
+fromArray :: forall f s a. Monad f => Array a -> MealyT f s a
 fromArray a = let len = length a
                   go n | n < zero || n >= len = halt
                   go n                        = fromMaybe (a !! n) <> go (n + one)
               in  go zero
 
-wrapEffect :: forall f s a. (Monad f) => f a -> MealyT f s a
+wrapEffect :: forall f s a. Monad f => f a -> MealyT f s a
 wrapEffect fa = MealyT $ const (flip Emit halt <$> fa)
 
 -- MonadLogic -- TODO: Create a purescript-logic package
-msplit :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s (Maybe (Tuple a (MealyT f s a)))
+msplit :: forall f s a. Monad f => MealyT f s a -> MealyT f s (Maybe (Tuple a (MealyT f s a)))
 msplit m = mealy $ \s ->  f <$> stepMealy s m
   where f Halt         = Emit (Nothing) halt
         f (Emit a m')  = Emit (Just $ Tuple a m') (msplit m')
 
-interleave :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a -> MealyT f s a
+interleave :: forall f s a. Monad f => MealyT f s a -> MealyT f s a -> MealyT f s a
 interleave m1 m2 = mealy $ \s ->
   stepMealy s m1 >>= case _ of
     Halt -> stepMealy s m2
     Emit a m1' -> pure $ Emit a (interleave m2 m1')
 
-once :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s a
+once :: forall f s a. Monad f => MealyT f s a -> MealyT f s a
 once = take 1
 
-ifte :: forall f s a b. (Monad f) => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b -> MealyT f s b
+ifte :: forall f s a b. Monad f => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b -> MealyT f s b
 ifte ma f mb = mealy $ \s ->
   stepMealy s ma >>= case _ of
     Halt -> stepMealy s mb
@@ -151,7 +151,7 @@ ifte ma f mb = mealy $ \s ->
     Halt -> Halt
     Emit b fb -> Emit b (fb <> ifte ma' f mb)
 
-when :: forall f s a b. (Monad f) => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b
+when :: forall f s a b. Monad f => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b
 when ma f = ifte ma f halt
 
 instance functorMealy :: (Monad f) => Functor (MealyT f s) where

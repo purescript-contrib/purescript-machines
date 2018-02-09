@@ -11,6 +11,9 @@ This library helps you build finite state machines. Currently, there's an implem
 bower i purescript-machines
 ```
 
+[!Example](https://github.com/purescript-contrib/purescript-machines)
+
+
 ## Documentation
 
 Module documentation is [published on Pursuit](http://pursuit.purescript.org/packages/purescript-machines).

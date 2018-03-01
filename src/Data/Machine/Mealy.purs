@@ -14,6 +14,7 @@ module Data.Machine.Mealy
   , take
   , drop
   , loop
+  , toUnfoldable
   , zipWith
   , scanl
   , collect
@@ -31,12 +32,12 @@ import Prelude
 
 import Control.Alt (class Alt)
 import Control.Alternative (class Alternative)
+import Control.Comonad (class Comonad, extract)
 import Control.Lazy (class Lazy)
 import Control.Monad.Eff.Class (class MonadEff, liftEff)
 import Control.MonadPlus (class MonadPlus)
 import Control.MonadZero (class MonadZero)
 import Control.Plus (class Plus)
-
 import Data.Array ((!!), length)
 import Data.List (List(..))
 import Data.Maybe (Maybe(..))
@@ -44,6 +45,7 @@ import Data.Monoid (class Monoid)
 import Data.Profunctor (class Profunctor, dimap)
 import Data.Profunctor.Strong (class Strong, first)
 import Data.Tuple (Tuple(..), fst, snd, swap)
+import Data.Unfoldable (class Unfoldable, unfoldr)
 
 newtype MealyT f s a = MealyT (s -> f (Step f s a))
 
@@ -97,6 +99,17 @@ loop m0 = loop' m0
     stepMealy s m >>= case _ of
       Halt -> stepMealy s (loop m0)
       Emit a m' -> pure $ Emit a (loop' m')
+
+toUnfoldable
+  :: forall f g s a
+   . Unfoldable g
+  => Comonad f
+  => s -> MealyT f s a -> g a
+toUnfoldable s = unfoldr stepUnfold
+  where
+  stepUnfold m = case extract (runMealyT m s) of
+    Emit a m' -> Just $ Tuple a m'
+    Halt      -> Nothing
 
 zipWith :: forall f s a b c. (Monad f) => (a -> b -> c) -> MealyT f s a -> MealyT f s b -> MealyT f s c
 zipWith f a b = f <$> a <*> b

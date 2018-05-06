@@ -34,18 +34,17 @@ import Control.Alt (class Alt)
 import Control.Alternative (class Alternative)
 import Control.Comonad (class Comonad, extract)
 import Control.Lazy (class Lazy)
-import Control.Monad.Eff.Class (class MonadEff, liftEff)
 import Control.MonadPlus (class MonadPlus)
 import Control.MonadZero (class MonadZero)
 import Control.Plus (class Plus)
 import Data.Array ((!!), length)
 import Data.List (List(..))
 import Data.Maybe (Maybe(..))
-import Data.Monoid (class Monoid)
 import Data.Profunctor (class Profunctor, dimap)
 import Data.Profunctor.Strong (class Strong, first)
 import Data.Tuple (Tuple(..), fst, snd, swap)
 import Data.Unfoldable (class Unfoldable, unfoldr)
+import Effect.Class (class MonadEffect, liftEffect)
 
 newtype MealyT f s a = MealyT (s -> f (Step f s a))
 
@@ -214,7 +213,7 @@ instance semigroupoidMealy :: (Monad f) => Semigroupoid (MealyT f) where
             fc Halt        = Halt
 
 instance categoryMealy :: (Monad f) => Category (MealyT f) where
-  id = pureMealy $ \t -> Emit t halt
+  identity = pureMealy $ \t -> Emit t halt
 
 instance bindMealy :: (Monad f) => Bind (MealyT f s) where
   bind m f = mealy $ \s -> let g (Emit a m') = h <$> stepMealy s (f a)
@@ -240,8 +239,8 @@ instance monadZero :: (Monad f) => MonadZero (MealyT f s)
 
 instance monadPlus :: (Monad f) => MonadPlus (MealyT f s)
 
-instance monadEffMealy :: (Monad f, MonadEff eff f) => MonadEff eff (MealyT f s) where
-  liftEff = wrapEffect <<< liftEff
+instance monadEffectMealy :: (Monad f, MonadEffect f) => MonadEffect (MealyT f s) where
+  liftEffect = wrapEffect <<< liftEffect
 
 instance lazyMealy :: (Monad f) => Lazy (MealyT f s a) where
   defer f = mealy \s -> runMealyT (f unit) s

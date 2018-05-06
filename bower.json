@@ -10,12 +10,11 @@
   },
   "license": "MIT",
   "dependencies": {
-    "purescript-arrays": "^4.0.0",
-    "purescript-eff": "^3.0.0",
-    "purescript-lists": "^4.0.0",
-    "purescript-maybe": "^3.0.0",
-    "purescript-monoid": "^3.0.0",
-    "purescript-profunctor": "^3.0.0",
-    "purescript-tuples": "^4.0.0"
+    "purescript-arrays": "#compiler/0.12",
+    "purescript-effect": "#compiler/0.12",
+    "purescript-lists": "#compiler/0.12",
+    "purescript-maybe": "#compiler/0.12",
+    "purescript-profunctor": "#compiler/0.12",
+    "purescript-tuples": "#compiler/0.12"
   }
 }

@@ -9,6 +9,7 @@ module Data.Machine.Mealy
   , stepMealy
   , runMealy
   , pureMealy
+  , hoistMealy
   , mealy
   , halt
   , take
@@ -48,10 +49,23 @@ import Effect.Class (class MonadEffect, liftEffect)
 
 newtype MealyT f s a = MealyT (s -> f (Step f s a))
 
+-- |let's you transform a mealy machine running in the context of `f` into one running in `g`
+-- if you can give a natural transformation from `f` to `g`
+-- 
+-- this can be useful if you use monad-transformers for example
+hoistMealy :: forall f g s a . Functor g => (f ~> g) -> MealyT f s a -> MealyT g s a
+hoistMealy f2g (MealyT goF) = MealyT goG
+  where goG s = hoistStep f2g <$> f2g (goF s)
+
 runMealyT :: forall f s a. MealyT f s a -> s -> f (Step f s a)
 runMealyT (MealyT f) = f
 
 data Step f s a = Emit a (MealyT f s a) | Halt
+
+hoistStep :: forall f g s a. Functor g => (f ~> g) -> Step f s a -> Step g s a
+hoistStep f2g (Emit v nxt) = Emit v (hoistMealy f2g nxt)
+hoistStep _   Halt         = Halt
+
 
 type Source f s = MealyT f Unit s
 type Sink f a = MealyT f a Unit

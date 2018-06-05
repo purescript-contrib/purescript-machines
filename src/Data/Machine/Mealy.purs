@@ -53,7 +53,7 @@ newtype MealyT f s a = MealyT (s -> f (Step f s a))
 -- |if you can give a natural transformation from `f` to `g`
 -- |
 -- |this can be useful if you use monad-transformers for example
-hoistMealy :: forall f g s a . Functor g => (f ~> g) -> MealyT f s a -> MealyT g s a
+hoistMealy :: forall f g s . Functor g => (f ~> g) -> MealyT f s ~> MealyT g s
 hoistMealy f2g (MealyT goF) = MealyT goG
   where goG s = hoistStep f2g <$> f2g (goF s)
 
@@ -62,7 +62,7 @@ runMealyT (MealyT f) = f
 
 data Step f s a = Emit a (MealyT f s a) | Halt
 
-hoistStep :: forall f g s a. Functor g => (f ~> g) -> Step f s a -> Step g s a
+hoistStep :: forall f g s . Functor g => (f ~> g) -> Step f s ~> Step g s
 hoistStep f2g (Emit v nxt) = Emit v (hoistMealy f2g nxt)
 hoistStep _   Halt         = Halt
 

@@ -49,10 +49,8 @@ import Effect.Class (class MonadEffect, liftEffect)
 
 newtype MealyT f s a = MealyT (s -> f (Step f s a))
 
--- |let's you transform a mealy machine running in the context of `f` into one running in `g`
--- |if you can give a natural transformation from `f` to `g`
--- |
--- |this can be useful if you use monad-transformers for example
+-- | Transforms a Mealy machine running in the context of `f` into one running 
+-- | in `g`, given a natural transformation from `f` to `g`.
 hoistMealy :: forall f g s . Functor g => (f ~> g) -> MealyT f s ~> MealyT g s
 hoistMealy f2g (MealyT goF) = MealyT goG
   where goG s = hoistStep f2g <$> f2g (goF s)

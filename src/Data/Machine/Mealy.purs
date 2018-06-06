@@ -1,6 +1,7 @@
 module Data.Machine.Mealy
   ( MealyT
   , runMealyT
+  , hoistMealyT
   , Step(..)
   , Source
   , Sink
@@ -9,7 +10,6 @@ module Data.Machine.Mealy
   , stepMealy
   , runMealy
   , pureMealy
-  , hoistMealy
   , mealy
   , halt
   , take
@@ -49,19 +49,19 @@ import Effect.Class (class MonadEffect, liftEffect)
 
 newtype MealyT f s a = MealyT (s -> f (Step f s a))
 
--- | Transforms a Mealy machine running in the context of `f` into one running 
--- | in `g`, given a natural transformation from `f` to `g`.
-hoistMealy :: forall f g s . Functor g => (f ~> g) -> MealyT f s ~> MealyT g s
-hoistMealy f2g (MealyT goF) = MealyT goG
-  where goG s = hoistStep f2g <$> f2g (goF s)
-
 runMealyT :: forall f s a. MealyT f s a -> s -> f (Step f s a)
 runMealyT (MealyT f) = f
+
+-- | Transforms a Mealy machine running in the context of `f` into one running 
+-- | in `g`, given a natural transformation from `f` to `g`.
+hoistMealyT :: forall f g s . Functor g => (f ~> g) -> MealyT f s ~> MealyT g s
+hoistMealyT f2g (MealyT goF) = MealyT goG
+  where goG s = hoistStep f2g <$> f2g (goF s)
 
 data Step f s a = Emit a (MealyT f s a) | Halt
 
 hoistStep :: forall f g s . Functor g => (f ~> g) -> Step f s ~> Step g s
-hoistStep f2g (Emit v nxt) = Emit v (hoistMealy f2g nxt)
+hoistStep f2g (Emit v nxt) = Emit v (hoistMealyT f2g nxt)
 hoistStep _   Halt         = Halt
 
 

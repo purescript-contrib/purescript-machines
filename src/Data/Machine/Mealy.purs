@@ -65,8 +65,8 @@ hoistStep f2g (Emit v nxt) = Emit v (hoistMealyT f2g nxt)
 hoistStep _   Halt         = Halt
 
 
-type Source f s = MealyT f Unit s
-type Sink f a = MealyT f a Unit
+type Source f a = MealyT f Unit a
+type Sink f s = MealyT f s Unit
 
 source :: forall f s. (Monad f) => f s -> Source f s
 source src =  mealy $ \_ -> flip Emit (source src) <$> src

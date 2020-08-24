@@ -2,7 +2,7 @@
 name: Change request
 about: Propose an improvement to this library
 title: ""
-labels: enhancement
+labels: ""
 assignees: ""
 ---
 

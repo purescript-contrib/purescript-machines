@@ -1,22 +1,45 @@
-# purescript-machines
+# Machines
 
-[![Latest release](http://img.shields.io/github/release/purescript-contrib/purescript-machines.svg)](https://github.com/purescript-contrib/purescript-machines/releases)
-[![Build status](https://travis-ci.org/purescript-contrib/purescript-machines.svg?branch=master)](https://travis-ci.org/purescript-contrib/purescript-machines)
-[![Pursuit](http://pursuit.purescript.org/packages/purescript-machines/badge)](http://pursuit.purescript.org/packages/purescript-machines/)
-[![Maintainer: paluh](https://img.shields.io/badge/maintainer-paluh-lightgrey.svg)](http://github.com/paluh)
+[![CI](https://github.com/purescript-contrib/purescript-machines/workflows/CI/badge.svg?branch=master)](https://github.com/purescript-contrib/purescript-machines/actions?query=workflow%3ACI+branch%3Amaster)
+[![Release](http://img.shields.io/github/release/purescript-contrib/purescript-machines.svg)](https://github.com/purescript-contrib/purescript-machines/releases)
+[![Pursuit](http://pursuit.purescript.org/packages/purescript-machines/badge)](http://pursuit.purescript.org/packages/purescript-machines)
+[![Maintainer: thomashoneyman](https://img.shields.io/badge/maintainer-thomashoneyman-teal.svg)](http://github.com/thomashoneyman)
+[![Maintainer: paluh](https://img.shields.io/badge/maintainer-paluh-teal.svg)](http://github.com/paluh)
 
-This library helps you build finite state machines. Currently, there's an implementation for Mealy machines with halting.
+Machines is a library for building finite state machines. Finite state machines are useful for modeling many concerns that developers face. They help you describe a set of possible states and rules for how to transition from one state to another. The result is a complete view of possible states and transitions between states.
+
+Currently this library implements [Mealy machines](https://en.wikipedia.org/wiki/Mealy_machine) with halting.
 
 ## Installation
 
-```shell
-bower i purescript-machines
+Install `machines` with [Spago](https://github.com/purescript/spago):
+
+```sh
+spago install machines
 ```
+
+## Quick start
+
+The quick start hasn't been written yet. Contributions are welcome!
 
 ## Documentation
 
-Module documentation is [published on Pursuit](http://pursuit.purescript.org/packages/purescript-machines).
+`machines` documentation is stored in a few places:
+
+1. Module documentation is [published on Pursuit](https://pursuit.purescript.org/packages/purescript-machines).
+2. Written documentation and [the changelog](./docs/changelog.md) are kept in [the docs directory](./docs).
+
+If you get stuck, there are several ways to get help:
+
+- [Open an issue](https://github.com/purescript-contrib/purescript-machines/issues) if you have encountered a bug or problem.
+- [Search or start a thread on the PureScript Discourse](https://discourse.purescript.org) if you have general questions. You can also ask questions in the `#purescript` and `#purescript-beginners` channels on the [Functional Programming Slack](https://functionalprogramming.slack.com) ([invite link](https://fpchat-invite.herokuapp.com/)).
 
 ## Contributing
 
-Read the [contribution guidelines](https://github.com/purescript-contrib/purescript-machines/blob/master/.github/contributing.md) to get started and see helpful related resources.
+You can contribute to `machines` in several ways:
+
+1. If you encounter a problem or have a question, please [open an issue](https://github.com/purescript-contrib/purescript-machines/issues). We'll do our best to work with you to resolve or answer it.
+
+2. If you would like to contribute code, tests, or documentation, please [read the contributor guide](./.github/CONTRIBUTING.md). It's a short, helpful introduction to contributing to this library, including development instructions.
+
+3. If you have written a library, tutorial, guide, or other resource based on this package, please share it on the [PureScript Discourse](https://discourse.purescript.org)! Writing libraries and learning resources are a great way to help this library succeed.

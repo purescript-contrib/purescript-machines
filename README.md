@@ -1,6 +1,6 @@
 # Machines
 
-[![CI](https://github.com/purescript-contrib/purescript-machines/workflows/CI/badge.svg?branch=master)](https://github.com/purescript-contrib/purescript-machines/actions?query=workflow%3ACI+branch%3Amaster)
+[![CI](https://github.com/purescript-contrib/purescript-machines/workflows/CI/badge.svg?branch=main)](https://github.com/purescript-contrib/purescript-machines/actions?query=workflow%3ACI+branch%3Amain)
 [![Release](http://img.shields.io/github/release/purescript-contrib/purescript-machines.svg)](https://github.com/purescript-contrib/purescript-machines/releases)
 [![Pursuit](http://pursuit.purescript.org/packages/purescript-machines/badge)](http://pursuit.purescript.org/packages/purescript-machines)
 [![Maintainer: thomashoneyman](https://img.shields.io/badge/maintainer-thomashoneyman-teal.svg)](http://github.com/thomashoneyman)
@@ -28,7 +28,7 @@ The quick start hasn't been written yet. Contributions are welcome!
 
 1. Module documentation is [published on Pursuit](https://pursuit.purescript.org/packages/purescript-machines).
 2. Written documentation and [the changelog](./docs/CHANGELOG.md) are kept in [the docs directory](./docs).
-3. Usage examples can be found in [the test suite](./tests)
+3. Usage examples can be found in [the test suite](./test)
 
 If you get stuck, there are several ways to get help:
 

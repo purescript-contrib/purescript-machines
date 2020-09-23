@@ -62,4 +62,3 @@ Updates for 1.0 core libraries.
 ## [v0.2.0](https://github.com/purescript-contrib/purescript-machines/releases/tag/v0.2.0) - 2014-12-30
 
 Bump arrays dependency
-

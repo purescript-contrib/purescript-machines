@@ -20,7 +20,55 @@ spago install machines
 
 ## Quick start
 
-The quick start hasn't been written yet. Contributions are welcome!
+The examples here use `Identity` for simplicity. Usually, you would use
+a different `Monad`, such as `Effect`, `Aff`, `State`, etc.
+
+There are several ways to build machines. One way is to use `do` syntax,
+for example:
+
+```purescript
+machine1 :: MealyT Identity Unit String
+machine1 = do
+  number <- fromArray [10, 20, 30, 40, 50, 0, 60, 70]
+  scaled <-
+      if number == 0
+          then halt
+          else pure $ div number 2
+  pure $ show scaled
+```
+
+This will create a machine `machine1` which goes through the "inputs"
+from the array. It then checks and halts on any zero input, and otherwise
+scales the inputs (by dividing by 2). The result is then transformed intoa string.
+
+The resulting machine can be materialized via `toUnfoldable unit machine1 :: Array String`. The result is `["5","10","15","20","25"]`.
+
+Another way to write the same machine is using machine composition:
+
+```purescript
+machine2 :: MealyT Identity Unit String
+machine2 =
+    fromArray [10, 20, 30, 40, 50, 0, 60, 70]
+        >>> pureMealy haltOn0
+        >>> pureMealy scale
+        >>> pureMealy pretty
+  where
+    haltOn0 0 = Halt
+    haltOn0 n = Emit n $ pureMealy haltOn0
+
+    scale n = Emit (n `div` 2) $ pureMealy scale
+
+    pretty n = Emit (show n) $ pureMealy pretty
+```
+
+This machine does the same thing, except it creates multiple machines:
+
+- `fromArray [10, 20 ...` is a `MealyT Identity Unit Int` which generates
+    the integerers in the provided array,
+- `pureMealy haltOn0` is a `MealyT Int Int` which halts on 0,
+- `pureMealy scale` is a `MealyT Int Int` which scales the inputs, and
+- `pureMealy pretty` is a `MealyT Int String` which converts inputs
+    from integers to strings.
 
 ## Documentation
 

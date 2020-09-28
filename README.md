@@ -53,11 +53,14 @@ machine2 =
         >>> pureMealy scale
         >>> pureMealy pretty
   where
+    haltOn0 :: Int -> Step Identity Int Int
     haltOn0 0 = Halt
     haltOn0 n = Emit n $ pureMealy haltOn0
 
+    scale :: Int -> Step Identity Int Int
     scale n = Emit (n `div` 2) $ pureMealy scale
 
+    pretty :: Int -> Step Identity Int String
     pretty n = Emit (show n) $ pureMealy pretty
 ```
 

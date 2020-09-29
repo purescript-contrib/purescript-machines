@@ -12,6 +12,8 @@ Bugfixes:
 
 Other improvements:
 
+- Added module documentation to `Data.Machine.Mealy` ([#39](https://github.com/purescript-contrib/purescript-machines/pull/39))
+
 ## [v5.1.0](https://github.com/purescript-contrib/purescript-machines/releases/tag/v5.1.0) - 2018-06-06
 
 - Added `hoistMealyT` (@CarstenKoenig)

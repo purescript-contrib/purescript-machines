@@ -20,32 +20,47 @@ spago install machines
 
 ## Quick start
 
-The examples here use `Identity` for simplicity. Usually, you would use
-a different `Monad`, such as `Effect`, `Aff`, `State`, etc.
+Mealy machines are finite state machines. The `MealyT f s a` type represents a machine where `f` is the effect used for evaluation, `s` is the input state, and `a` is the output value. The examples here use `Identity` as the effect type for simplicity, but you would usually use a different `Monad` such as `Effect`, `Aff`, or `State`.
 
 There are several ways to build machines. One way is to use `do` syntax,
 for example:
 
 ```purescript
+import Prelude
+
+import Control.MonadZero (guard)
+import Data.Machine.Mealy (MealyT, fromArray, toUnfoldable)
+import Data.Identity (Identity)
+
 machine1 :: MealyT Identity Unit String
 machine1 = do
   number <- fromArray [10, 20, 30, 40, 50, 0, 60, 70]
-  scaled <-
-      if number == 0
-          then halt
-          else pure $ div number 2
+  guard (number /= 0)
+  let scaled = div number 2
   pure $ show scaled
 ```
 
 This will create a machine `machine1` which goes through the "inputs"
 from the array. It then checks and halts on any zero input, and otherwise
-scales the inputs (by dividing by 2). The result is then transformed intoa string.
+scales the inputs (by dividing by 2). The result is then transformed into a string.
 
-The resulting machine can be materialized via `toUnfoldable unit machine1 :: Array String`. The result is `["5","10","15","20","25"]`.
-
-Another way to write the same machine is using machine composition:
+The resulting machine can be materialized via
 
 ```purescript
+> toUnfoldable unit machine1 :: Array String
+["5","10","15","20","25"]
+```
+
+Another way to write the same machine is using machine composition. In this example, we will be creating multiple machines using `pureMealy`, which relies on `Step`s.
+
+A `Step f s a` represents a state transition in the machine. When you run a machine you are executing a series of steps. At each step the machine can stop via the `Halt` constructor or `Emit` a value and construct the rest of the machine.
+
+```purescript
+import Prelude
+
+import Data.Identity (Identity)
+import Data.Machine.Mealy (MealyT, Step(..), fromArray, pureMealy)
+
 machine2 :: MealyT Identity Unit String
 machine2 =
     fromArray [10, 20, 30, 40, 50, 0, 60, 70]

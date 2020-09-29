@@ -76,10 +76,12 @@ hoistStep :: forall f g s . Functor g => (f ~> g) -> Step f s ~> Step g s
 hoistStep f2g (Emit v nxt) = Emit v (hoistMealyT f2g nxt)
 hoistStep _   Halt         = Halt
 
--- | Sources are machines with trivial `Unit` input value.
+-- | Sources are 'initial nodes' in machines. They allow for data
+-- | to be generated.
 type Source f a = MealyT f Unit a
 
--- | Sinks are machines with trivial `Unit` output values.
+-- | Sinks are 'terminator nodes' in machines. They allow for an
+-- | effectful computation to be executed on the inputs.
 type Sink f s = MealyT f s Unit
 
 -- | Wrap an effectful value into a source. The effect will be repeated
@@ -92,8 +94,7 @@ type Sink f s = MealyT f s Unit
 source :: forall f s. (Monad f) => f s -> Source f s
 source src =  mealy $ \_ -> flip Emit (source src) <$> src
 
--- | Sinks are 'terminator nodes' in machines. They allow for an
--- | effectful computation to be executed on the inputs.
+-- | Construct a machine which executes an effectful computation on its inputs.
 -- |
 -- | For example, logging could be used as a sink:
 -- | ```purescript
@@ -217,7 +218,7 @@ wrapEffect :: forall f s a. (Monad f) => f a -> MealyT f s a
 wrapEffect fa = MealyT $ const (flip Emit halt <$> fa)
 
 -- MonadLogic -- TODO: Create a purescript-logic package
--- | Unwrap a machine such that its output is either `Nothign` in case
+-- | Unwrap a machine such that its output is either `Nothing` in case
 -- | it would halt, or `Just` the output value and the next computation.
 msplit :: forall f s a. (Monad f) => MealyT f s a -> MealyT f s (Maybe (Tuple a (MealyT f s a)))
 msplit m = mealy $ \s ->  f <$> stepMealy s m

@@ -20,7 +20,73 @@ spago install machines
 
 ## Quick start
 
-The quick start hasn't been written yet. Contributions are welcome!
+Mealy machines are finite state machines. The `MealyT f s a` type represents a machine where `f` is the effect used for evaluation, `s` is the input state, and `a` is the output value. The examples here use `Identity` as the effect type for simplicity, but you would usually use a different `Monad` such as `Effect`, `Aff`, or `State`.
+
+There are several ways to build machines. One way is to use `do` syntax,
+for example:
+
+```purescript
+import Prelude
+
+import Control.MonadZero (guard)
+import Data.Machine.Mealy (MealyT, fromArray, toUnfoldable)
+import Data.Identity (Identity)
+
+machine1 :: MealyT Identity Unit String
+machine1 = do
+  number <- fromArray [10, 20, 30, 40, 50, 0, 60, 70]
+  guard (number /= 0)
+  let scaled = div number 2
+  pure $ show scaled
+```
+
+This will create a machine `machine1` which goes through the "inputs"
+from the array. It then checks and halts on any zero input, and otherwise
+scales the inputs (by dividing by 2). The result is then transformed into a string.
+
+The resulting machine can be materialized via
+
+```purescript
+> toUnfoldable unit machine1 :: Array String
+["5","10","15","20","25"]
+```
+
+Another way to write the same machine is using machine composition. In this example, we will be creating multiple machines using `pureMealy`, which relies on `Step`s.
+
+A `Step f s a` represents a state transition in the machine. When you run a machine you are executing a series of steps. At each step the machine can stop via the `Halt` constructor or `Emit` a value and construct the rest of the machine.
+
+```purescript
+import Prelude
+
+import Data.Identity (Identity)
+import Data.Machine.Mealy (MealyT, Step(..), fromArray, pureMealy)
+
+machine2 :: MealyT Identity Unit String
+machine2 =
+    fromArray [10, 20, 30, 40, 50, 0, 60, 70]
+        >>> pureMealy haltOn0
+        >>> pureMealy scale
+        >>> pureMealy pretty
+  where
+    haltOn0 :: Int -> Step Identity Int Int
+    haltOn0 0 = Halt
+    haltOn0 n = Emit n $ pureMealy haltOn0
+
+    scale :: Int -> Step Identity Int Int
+    scale n = Emit (n `div` 2) $ pureMealy scale
+
+    pretty :: Int -> Step Identity Int String
+    pretty n = Emit (show n) $ pureMealy pretty
+```
+
+This machine does the same thing, except it creates multiple machines:
+
+- `fromArray [10, 20 ...` is a `MealyT Identity Unit Int` which generates
+    the integerers in the provided array,
+- `pureMealy haltOn0` is a `MealyT Int Int` which halts on 0,
+- `pureMealy scale` is a `MealyT Int Int` which scales the inputs, and
+- `pureMealy pretty` is a `MealyT Int String` which converts inputs
+    from integers to strings.
 
 ## Documentation
 

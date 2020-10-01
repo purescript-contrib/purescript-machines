@@ -20,7 +20,7 @@ spago install machines
 
 ## Quick start
 
-Mealy machines are finite state machines. The `MealyT f s a` type represents a machine where `f` is the effect used for evaluation, `s` is the input state, and `a` is the output value. The examples here use `Identity` as the effect type for simplicity, but you would usually use a different `Monad` such as `Effect`, `Aff`, or `State`.
+Mealy machines are finite state machines. The `MealyT f i o` type represents a machine where `f` is the effect used for evaluation, `i` is the input, and `o` is the output value. The examples here use `Identity` as the effect type for simplicity, but you would usually use a different `Monad` such as `Effect`, `Aff`, or `State`.
 
 There are several ways to build machines. One way is to use `do` syntax,
 for example:
@@ -53,7 +53,7 @@ The resulting machine can be materialized via
 
 Another way to write the same machine is using machine composition. In this example, we will be creating multiple machines using `pureMealy`, which relies on `Step`s.
 
-A `Step f s a` represents a state transition in the machine. When you run a machine you are executing a series of steps. At each step the machine can stop via the `Halt` constructor or `Emit` a value and construct the rest of the machine.
+A `Step f i o` represents a state transition in the machine. When you run a machine you are executing a series of steps. At each step the machine can stop via the `Halt` constructor or `Emit` a value and construct the rest of the machine.
 
 ```purescript
 import Prelude

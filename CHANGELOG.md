@@ -14,6 +14,7 @@ Other improvements:
 
 - Added module documentation to `Data.Machine.Mealy` ([#39](https://github.com/purescript-contrib/purescript-machines/pull/39))
 - Loosened constraints on functions and instances ([#43](https://github.com/purescript-contrib/purescript-machines/pull/43)) by [@mhmdanas](https://github.com/mhmdanas).
+- Renamed type variables of `MealyT` by [@paluh](https://github.com/paluh).
 
 ## [v5.1.0](https://github.com/purescript-contrib/purescript-machines/releases/tag/v5.1.0) - 2018-06-06
 

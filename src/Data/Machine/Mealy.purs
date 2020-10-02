@@ -52,37 +52,37 @@ import Effect.Class (class MonadEffect, liftEffect)
 -- | Mealy is a finite state machine, where:
 -- |
 -- | - `f` is the effect under which we evaluate,
--- | - `s` is the input state, and
--- | - `a` is the output type.
-newtype MealyT f s a = MealyT (s -> f (Step f s a))
+-- | - `i` is the input type and
+-- | - `o` is the output type.
+newtype MealyT f i o = MealyT (i -> f (Step f i o))
 
-runMealyT :: forall f s a. MealyT f s a -> s -> f (Step f s a)
+runMealyT :: forall f i o. MealyT f i o -> i -> f (Step f i o)
 runMealyT (MealyT f) = f
 
 -- | Transforms a Mealy machine running in the context of `f` into one running
 -- | in `g`, given a natural transformation from `f` to `g`.
-hoistMealyT :: forall f g s . Functor g => (f ~> g) -> MealyT f s ~> MealyT g s
+hoistMealyT :: forall f g i. Functor g => (f ~> g) -> MealyT f i ~> MealyT g i
 hoistMealyT f2g (MealyT goF) = MealyT goG
-  where goG s = hoistStep f2g <$> f2g (goF s)
+  where goG i = hoistStep f2g <$> f2g (goF i)
 
 -- | Step is the core for running machines. Machines can either stop
 -- | via the `Halt` constructor, or emit a value and recursively
 -- | construct the rest of the machine.
-data Step f s a = Emit a (MealyT f s a) | Halt
+data Step f i o = Emit o (MealyT f i o) | Halt
 
 -- | Transforms a step running in the context of `f` into one running
 -- | in `g`, given a natural transformation from `f` to `g`.
-hoistStep :: forall f g s . Functor g => (f ~> g) -> Step f s ~> Step g s
+hoistStep :: forall f g i. Functor g => (f ~> g) -> Step f i ~> Step g i
 hoistStep f2g (Emit v nxt) = Emit v (hoistMealyT f2g nxt)
 hoistStep _   Halt         = Halt
 
 -- | Sources are 'initial nodes' in machines. They allow for data
 -- | to be generated.
-type Source f a = MealyT f Unit a
+type Source f o = MealyT f Unit o
 
 -- | Sinks are 'terminator nodes' in machines. They allow for an
 -- | effectful computation to be executed on the inputs.
-type Sink f s = MealyT f s Unit
+type Sink f i = MealyT f i Unit
 
 -- | Wrap an effectful value into a source. The effect will be repeated
 -- | indefinitely.
@@ -91,7 +91,7 @@ type Sink f s = MealyT f s Unit
 -- | ```purescript
 -- | take 10 $ source (pure 1)
 -- | ```
-source :: forall f s. Functor f => f s -> Source f s
+source :: forall f o. Functor f => f o -> Source f o
 source src =  mealy $ \_ -> flip Emit (source src) <$> src
 
 -- | Construct a machine which executes an effectful computation on its inputs.
@@ -100,8 +100,8 @@ source src =  mealy $ \_ -> flip Emit (source src) <$> src
 -- | ```purescript
 -- | take 10 $ source (pure 1) >>> sink logShow
 -- | ```
-sink :: forall f a. Functor f => (a -> f Unit) -> Sink f a
-sink f = mealy $ \a -> const (Emit unit (sink f)) <$> f a
+sink :: forall f i. Functor f => (i -> f Unit) -> Sink f i
+sink f = mealy $ \i -> const (Emit unit (sink f)) <$> f i
 
 -- | Run a machine as an effectful computatation.
 -- |
@@ -115,7 +115,7 @@ runMealy m = stepMealy unit m >>= f
                       f (Emit _ m') = runMealy m'
 
 -- | Execute (unroll) a single step on a machine.
-stepMealy :: forall f s a. s -> MealyT f s a -> f (Step f s a)
+stepMealy :: forall f i o. i -> MealyT f i o -> f (Step f i o)
 stepMealy = flip runMealyT
 
 -- | Wrap a pure function into a machine. The function can either
@@ -131,107 +131,107 @@ stepMealy = flip runMealyT
 -- |     go 0 = Halt
 -- |     go n = Emit n (pureMealy haltOn0)
 -- | ```
-pureMealy :: forall f s a. Applicative f => (s -> Step f s a ) -> MealyT f s a
+pureMealy :: forall f i o. Applicative f => (i -> Step f i o) -> MealyT f i o
 pureMealy = MealyT <<< map pure
 
 -- | Wrap an effectful function into a machine. See `pureMealy` for
 -- | an example using pure functions.
-mealy :: forall f s a. (s -> f (Step f s a)) -> MealyT f s a
+mealy :: forall f i o. (i -> f (Step f i o)) -> MealyT f i o
 mealy = MealyT
 
 -- | A machine which halts for any input.
-halt :: forall f s a. Applicative f => MealyT f s a
+halt :: forall f i o. Applicative f => MealyT f i o
 halt = pureMealy $ const Halt
 
 -- | Limit the number of outputs of a machine. After using up the `n`
 -- | allotted outputs, the machine will halt.
-take :: forall f s a. Applicative f => Int -> MealyT f s a -> MealyT f s a
+take :: forall f i o. Applicative f => Int -> MealyT f i o -> MealyT f i o
 take n m  = if n <= 0 then halt
-              else mealy $ \s ->  f <$> stepMealy s m
+              else mealy $ \i ->  f <$> stepMealy i m
                                   where f Halt        = Halt
-                                        f (Emit a m') = Emit a (take (n - 1) m')
+                                        f (Emit o m') = Emit o (take (n - 1) m')
 
 -- | Skip a number of outputs for a machine.
-drop :: forall f s a. Monad f => Int -> MealyT f s a -> MealyT f s a
+drop :: forall f i o. Monad f => Int -> MealyT f i o -> MealyT f i o
 drop n m  = if n <= 0 then m
-              else mealy $ \s ->  let f Halt        = pure Halt
-                                      f (Emit a m') = stepMealy s (drop (n - 1) m')
-                                  in  stepMealy s m >>= f
+              else mealy $ \i ->  let f Halt        = pure Halt
+                                      f (Emit o m') = stepMealy i (drop (n - 1) m')
+                                  in  stepMealy i m >>= f
 
 -- | Loop a machine forever.
-loop :: forall f s a. Monad f => MealyT f s a -> MealyT f s a
+loop :: forall f i o. Monad f => MealyT f i o -> MealyT f i o
 loop m0 = loop' m0
   where
-  loop' m = mealy $ \s ->
-    stepMealy s m >>= case _ of
-      Halt -> stepMealy s (loop m0)
-      Emit a m' -> pure $ Emit a (loop' m')
+  loop' m = mealy $ \i ->
+    stepMealy i m >>= case _ of
+      Halt -> stepMealy i (loop m0)
+      Emit o m' -> pure $ Emit o (loop' m')
 
 -- | Extract all the outputs of a machine, given some input.
 toUnfoldable
-  :: forall f g s a
+  :: forall f g i o
    . Unfoldable g
   => Comonad f
-  => s -> MealyT f s a -> g a
-toUnfoldable s = unfoldr stepUnfold
+  => i -> MealyT f i o -> g o
+toUnfoldable i = unfoldr stepUnfold
   where
-  stepUnfold m = case extract (runMealyT m s) of
-    Emit a m' -> Just $ Tuple a m'
+  stepUnfold m = case extract (runMealyT m i) of
+    Emit o m' -> Just $ Tuple o m'
     Halt      -> Nothing
 
 -- | Zip two machines together under some function `f`.
-zipWith :: forall f s a b c. Apply f => (a -> b -> c) -> MealyT f s a -> MealyT f s b -> MealyT f s c
+zipWith :: forall f i a b c. Apply f => (a -> b -> c) -> MealyT f i a -> MealyT f i b -> MealyT f i c
 zipWith f a b = f <$> a <*> b
 
 -- | Accumulate the outputs of a machine into a new machine.
-scanl :: forall f s a b. Functor f => (b -> a -> b) -> b -> MealyT f s a -> MealyT f s b
+scanl :: forall f i a b. Functor f => (b -> a -> b) -> b -> MealyT f i a -> MealyT f i b
 scanl f = go where
-    go b m = mealy $ \s ->  let g Halt        = Halt
-                                g (Emit a m') = (let b' = f b a in Emit b' (go b' m'))
-                             in g <$> stepMealy s m
+    go b m = mealy $ \i ->  let g Halt        = Halt
+                                g (Emit o m') = (let b' = f b o in Emit b' (go b' m'))
+                             in g <$> stepMealy i m
 
 -- | Accumulates the outputs of a machine as a `List`.
-collect :: forall f s a. Functor f => MealyT f s a -> MealyT f s (List a)
+collect :: forall f i o. Functor f => MealyT f i o -> MealyT f i (List o)
 collect = scanl (flip Cons) Nil
 
 -- | Creates a machine which emits a single value before halting.
-singleton :: forall f s a. Applicative f => a -> MealyT f s a
-singleton a = pureMealy $ \s -> Emit a halt
+singleton :: forall f i o. Applicative f => o -> MealyT f i o
+singleton o = pureMealy $ \i -> Emit o halt
 
 -- | Creates a machine which either emits a single value before halting
 -- | (for `Just`), or just halts (in the case of `Nothing`).
-fromMaybe :: forall f s a. Applicative f => Maybe a -> MealyT f s a
+fromMaybe :: forall f i o. Applicative f => Maybe o -> MealyT f i o
 fromMaybe Nothing  = halt
-fromMaybe (Just a) = singleton a
+fromMaybe (Just o) = singleton o
 
--- | Creates a machine whbich emits all the values of the array before
+-- | Creates a machine which emits all the values of the array before
 -- | halting.
-fromArray :: forall f s a. Monad f => Array a -> MealyT f s a
-fromArray a = let len = length a
+fromArray :: forall f i o. Monad f => Array o -> MealyT f i o
+fromArray o = let len = length o
                   go n | n < zero || n >= len = halt
-                  go n                        = fromMaybe (a !! n) <> go (n + one)
+                  go n                        = fromMaybe (o !! n) <> go (n + one)
               in  go zero
 
 -- | Creates a machine which wraps an effectful computation and ignores
 -- | its input.
-wrapEffect :: forall f s a. Applicative f => f a -> MealyT f s a
+wrapEffect :: forall f i o. Applicative f => f o -> MealyT f i o
 wrapEffect fa = MealyT $ const (flip Emit halt <$> fa)
 
 -- MonadLogic -- TODO: Create a purescript-logic package
 -- | Unwrap a machine such that its output is either `Nothing` in case
 -- | it would halt, or `Just` the output value and the next computation.
-msplit :: forall f s a. Applicative f => MealyT f s a -> MealyT f s (Maybe (Tuple a (MealyT f s a)))
-msplit m = mealy $ \s ->  f <$> stepMealy s m
+msplit :: forall f i o. Applicative f => MealyT f i o -> MealyT f i (Maybe (Tuple o (MealyT f i o)))
+msplit m = mealy $ \i ->  f <$> stepMealy i m
   where f Halt         = Emit (Nothing) halt
-        f (Emit a m')  = Emit (Just $ Tuple a m') (msplit m')
+        f (Emit o m')  = Emit (Just $ Tuple o m') (msplit m')
 
 -- | Interleaves the values of two machines with matching inputs and
 -- | outputs.
-interleave :: forall f s a. Monad f => MealyT f s a -> MealyT f s a -> MealyT f s a
-interleave m1 m2 = mealy $ \s ->
-  stepMealy s m1 >>= case _ of
-    Halt -> stepMealy s m2
-    Emit a m1' -> pure $ Emit a (interleave m2 m1')
+interleave :: forall f i o. Monad f => MealyT f i o -> MealyT f i o -> MealyT f i o
+interleave m1 m2 = mealy $ \i ->
+  stepMealy i m1 >>= case _ of
+    Halt -> stepMealy i m2
+    Emit o m1' -> pure $ Emit o (interleave m2 m1')
 
 -- | Takes a single output from a machine.
 once :: forall f s a. Applicative f => MealyT f s a -> MealyT f s a
@@ -242,11 +242,11 @@ once = take 1
 -- | grab outputs from the first machine and pass them over to the
 -- | continuation as long as neither halts.
 -- | Once the process halts, the second (`b`) machine is returned.
-ifte :: forall f s a b. Monad f => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b -> MealyT f s b
-ifte ma f mb = mealy $ \s ->
-  stepMealy s ma >>= case _ of
-    Halt -> stepMealy s mb
-    Emit a ma' -> go ma' <$> stepMealy s (f a)
+ifte :: forall f i a b. Monad f => MealyT f i a -> (a -> MealyT f i b) -> MealyT f i b -> MealyT f i b
+ifte ma f mb = mealy $ \i ->
+  stepMealy i ma >>= case _ of
+    Halt -> stepMealy i mb
+    Emit a ma' -> go ma' <$> stepMealy i (f a)
   where
   go ma' = case _ of
     Halt -> Halt
@@ -255,27 +255,27 @@ ifte ma f mb = mealy $ \s ->
 -- | Given a machine and a continuation, it will pass outputs from
 -- | the machine to the continuation as long as possible until
 -- | one of them halts.
-when :: forall f s a b. Monad f => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b
+when :: forall f i a b. Monad f => MealyT f i a -> (a -> MealyT f i b) -> MealyT f i b
 when ma f = ifte ma f halt
 
-instance functorMealy :: Functor f => Functor (MealyT f s) where
-  map f m = mealy $ \s -> g <$> stepMealy s m where
-    g (Emit a m') = Emit (f a) (f <$> m')
+instance functorMealy :: Functor f => Functor (MealyT f i) where
+  map f m = mealy $ \i -> g <$> stepMealy i m where
+    g (Emit o m') = Emit (f o) (f <$> m')
     g Halt        = Halt
 
-instance applyMealy :: Apply f => Apply (MealyT f s) where
-  apply f x = mealy $ \s -> ap <$> stepMealy s f <*> stepMealy s x
+instance applyMealy :: Apply f => Apply (MealyT f i) where
+  apply f x = mealy $ \i -> ap <$> stepMealy i f <*> stepMealy i x
     where
     ap Halt _ = Halt
     ap _ Halt = Halt
     ap (Emit f' g) (Emit x' y) = Emit (f' x') (g <*> y)
 
-instance applicativeMealy :: Applicative f => Applicative (MealyT f s) where
+instance applicativeMealy :: Applicative f => Applicative (MealyT f i) where
   pure t = pureMealy $ \s -> Emit t halt
 
 instance profunctorMealy :: Functor f => Profunctor (MealyT f) where
   dimap l r = remap where
-    remap m = mealy $ \s -> g <$> stepMealy (l s) m where
+    remap m = mealy $ \i -> g <$> stepMealy (l i) m where
                 g (Emit c m') = Emit (r c) (remap m')
                 g Halt        = Halt
 
@@ -287,13 +287,13 @@ instance strongMealy :: Functor f => Strong (MealyT f) where
                           in  g <$> stepMealy b m
   second = dimap swap swap <<< first
 
-instance semigroupMealy :: Monad f => Semigroup (MealyT f s a) where
-  append l r = mealy $ \s ->  let g (Emit c l') = pure $ Emit c (l' <> r)
-                                  g Halt        = stepMealy s r
-                              in  stepMealy s l >>= g
+instance semigroupMealy :: Monad f => Semigroup (MealyT f i o) where
+  append l r = mealy $ \i ->  let g (Emit c l') = pure $ Emit c (l' <> r)
+                                  g Halt        = stepMealy i r
+                              in  stepMealy i l >>= g
 
-instance monoidMealy :: Monad f => Monoid (MealyT f s a) where
-  mempty = mealy $ \s -> pure Halt
+instance monoidMealy :: Monad f => Monoid (MealyT f i o) where
+  mempty = mealy $ \_ -> pure Halt
 
 instance semigroupoidMealy :: Monad f => Semigroupoid (MealyT f) where
   compose f g =
@@ -307,32 +307,32 @@ instance semigroupoidMealy :: Monad f => Semigroupoid (MealyT f) where
 instance categoryMealy :: Monad f => Category (MealyT f) where
   identity = pureMealy $ \t -> Emit t halt
 
-instance bindMealy :: Monad f => Bind (MealyT f s) where
-  bind m f = mealy $ \s -> let g (Emit a m') = h <$> stepMealy s (f a)
+instance bindMealy :: Monad f => Bind (MealyT f i) where
+  bind m f = mealy $ \i -> let g (Emit o m') = h <$> stepMealy i (f o)
                                  where
-                                 h (Emit b bs) = Emit b (bs <> (m' >>= f))
+                                 h (Emit b bi) = Emit b (bi <> (m' >>= f))
                                  h Halt        = Halt
                                g Halt        = pure Halt
-                           in  stepMealy s m >>= g
+                           in  stepMealy i m >>= g
 
-instance monadMealy :: Monad f => Monad (MealyT f s)
+instance monadMealy :: Monad f => Monad (MealyT f i)
 
-instance altMealy :: Monad f => Alt (MealyT f s) where
-  alt x y = mealy $ \s -> let f Halt         = stepMealy s y
-                              f (Emit a m')  = pure $ Emit a m'
-                          in  stepMealy s x >>= f
+instance altMealy :: Monad f => Alt (MealyT f i) where
+  alt x y = mealy $ \i -> let f Halt         = stepMealy i y
+                              f (Emit o m')  = pure $ Emit o m'
+                          in  stepMealy i x >>= f
 
-instance plusMealy :: Monad f => Plus (MealyT f s) where
+instance plusMealy :: Monad f => Plus (MealyT f i) where
   empty = halt
 
-instance alternativeMealy :: Monad f => Alternative (MealyT f s)
+instance alternativeMealy :: Monad f => Alternative (MealyT f i)
 
-instance monadZero :: Monad f => MonadZero (MealyT f s)
+instance monadZero :: Monad f => MonadZero (MealyT f i)
 
-instance monadPlus :: Monad f => MonadPlus (MealyT f s)
+instance monadPlus :: Monad f => MonadPlus (MealyT f i)
 
-instance monadEffectMealy :: MonadEffect f => MonadEffect (MealyT f s) where
+instance monadEffectMealy :: MonadEffect f => MonadEffect (MealyT f i) where
   liftEffect = wrapEffect <<< liftEffect
 
-instance lazyMealy :: Lazy (MealyT f s a) where
-  defer f = mealy \s -> runMealyT (f unit) s
+instance lazyMealy :: Lazy (MealyT f i o) where
+  defer f = mealy \i -> runMealyT (f unit) i

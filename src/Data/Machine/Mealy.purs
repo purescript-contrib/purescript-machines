@@ -258,28 +258,28 @@ ifte ma f mb = mealy $ \s ->
 when :: forall f s a b. Monad f => MealyT f s a -> (a -> MealyT f s b) -> MealyT f s b
 when ma f = ifte ma f halt
 
-instance functorMealy :: (Functor f) => Functor (MealyT f s) where
+instance functorMealy :: Functor f => Functor (MealyT f s) where
   map f m = mealy $ \s -> g <$> stepMealy s m where
     g (Emit a m') = Emit (f a) (f <$> m')
     g Halt        = Halt
 
-instance applyMealy :: (Apply f) => Apply (MealyT f s) where
+instance applyMealy :: Apply f => Apply (MealyT f s) where
   apply f x = mealy $ \s -> ap <$> stepMealy s f <*> stepMealy s x
     where
     ap Halt _ = Halt
     ap _ Halt = Halt
     ap (Emit f' g) (Emit x' y) = Emit (f' x') (g <*> y)
 
-instance applicativeMealy :: (Applicative f) => Applicative (MealyT f s) where
+instance applicativeMealy :: Applicative f => Applicative (MealyT f s) where
   pure t = pureMealy $ \s -> Emit t halt
 
-instance profunctorMealy :: (Functor f) => Profunctor (MealyT f) where
+instance profunctorMealy :: Functor f => Profunctor (MealyT f) where
   dimap l r = remap where
     remap m = mealy $ \s -> g <$> stepMealy (l s) m where
                 g (Emit c m') = Emit (r c) (remap m')
                 g Halt        = Halt
 
-instance strongMealy :: (Functor f) => Strong (MealyT f) where
+instance strongMealy :: Functor f => Strong (MealyT f) where
   first m = mealy $ \s -> let b = fst s
                               d = snd s
                               g (Emit c f') = Emit (Tuple c d) (first f')
@@ -287,15 +287,15 @@ instance strongMealy :: (Functor f) => Strong (MealyT f) where
                           in  g <$> stepMealy b m
   second = dimap swap swap <<< first
 
-instance semigroupMealy :: (Monad f) => Semigroup (MealyT f s a) where
+instance semigroupMealy :: Monad f => Semigroup (MealyT f s a) where
   append l r = mealy $ \s ->  let g (Emit c l') = pure $ Emit c (l' <> r)
                                   g Halt        = stepMealy s r
                               in  stepMealy s l >>= g
 
-instance monoidMealy :: (Monad f) => Monoid (MealyT f s a) where
+instance monoidMealy :: Monad f => Monoid (MealyT f s a) where
   mempty = mealy $ \s -> pure Halt
 
-instance semigroupoidMealy :: (Monad f) => Semigroupoid (MealyT f) where
+instance semigroupoidMealy :: Monad f => Semigroupoid (MealyT f) where
   compose f g =
     mealy $ \b -> stepMealy b g >>= gb
     where gb Halt = pure Halt
@@ -304,10 +304,10 @@ instance semigroupoidMealy :: (Monad f) => Semigroupoid (MealyT f) where
             fc (Emit d f') = Emit d (f' <<< g')
             fc Halt        = Halt
 
-instance categoryMealy :: (Monad f) => Category (MealyT f) where
+instance categoryMealy :: Monad f => Category (MealyT f) where
   identity = pureMealy $ \t -> Emit t halt
 
-instance bindMealy :: (Monad f) => Bind (MealyT f s) where
+instance bindMealy :: Monad f => Bind (MealyT f s) where
   bind m f = mealy $ \s -> let g (Emit a m') = h <$> stepMealy s (f a)
                                  where
                                  h (Emit b bs) = Emit b (bs <> (m' >>= f))
@@ -315,21 +315,21 @@ instance bindMealy :: (Monad f) => Bind (MealyT f s) where
                                g Halt        = pure Halt
                            in  stepMealy s m >>= g
 
-instance monadMealy :: (Monad f) => Monad (MealyT f s)
+instance monadMealy :: Monad f => Monad (MealyT f s)
 
-instance altMealy :: (Monad f) => Alt (MealyT f s) where
+instance altMealy :: Monad f => Alt (MealyT f s) where
   alt x y = mealy $ \s -> let f Halt         = stepMealy s y
                               f (Emit a m')  = pure $ Emit a m'
                           in  stepMealy s x >>= f
 
-instance plusMealy :: (Monad f) => Plus (MealyT f s) where
+instance plusMealy :: Monad f => Plus (MealyT f s) where
   empty = halt
 
-instance alternativeMealy :: (Monad f) => Alternative (MealyT f s)
+instance alternativeMealy :: Monad f => Alternative (MealyT f s)
 
-instance monadZero :: (Monad f) => MonadZero (MealyT f s)
+instance monadZero :: Monad f => MonadZero (MealyT f s)
 
-instance monadPlus :: (Monad f) => MonadPlus (MealyT f s)
+instance monadPlus :: Monad f => MonadPlus (MealyT f s)
 
 instance monadEffectMealy :: MonadEffect f => MonadEffect (MealyT f s) where
   liftEffect = wrapEffect <<< liftEffect

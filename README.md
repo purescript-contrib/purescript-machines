@@ -53,7 +53,6 @@ A `Step f i o` represents a state transition in the machine. When you run a mach
 
 ```purescript
 import Data.Identity (Identity)
-import Data.Machine.Mealy (MealyT, Step(..), fromArray, pureMealy)
 
 machine2 :: MealyT Identity Unit String
 machine2 =

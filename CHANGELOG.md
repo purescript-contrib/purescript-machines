@@ -5,6 +5,7 @@ Notable changes to this project are documented in this file. The format is based
 ## [Unreleased]
 
 Breaking changes (😱!!!):
+  - Removed `MonadZero` instance, as the type class has been deprecated in PureScript 0.14. Use `Monad` + `Alternative` constraints instead. ([#46](https://github.com/purescript-contrib/purescript-machines/pull/39)
 
 New features:
 

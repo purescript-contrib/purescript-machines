@@ -38,7 +38,6 @@ import Control.Alternative (class Alternative)
 import Control.Comonad (class Comonad, extract)
 import Control.Lazy (class Lazy)
 import Control.MonadPlus (class MonadPlus)
-import Control.MonadZero (class MonadZero)
 import Control.Plus (class Plus)
 import Data.Array ((!!), length)
 import Data.List (List(..))
@@ -326,8 +325,6 @@ instance plusMealy :: Monad f => Plus (MealyT f i) where
   empty = halt
 
 instance alternativeMealy :: Monad f => Alternative (MealyT f i)
-
-instance monadZero :: Monad f => MonadZero (MealyT f i)
 
 instance monadPlus :: Monad f => MonadPlus (MealyT f i)
 

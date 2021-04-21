@@ -154,7 +154,7 @@ take n m  = if n <= 0 then halt
 drop :: forall f i o. Monad f => Int -> MealyT f i o -> MealyT f i o
 drop n m  = if n <= 0 then m
               else mealy $ \i ->  let f Halt        = pure Halt
-                                      f (Emit o m') = stepMealy i (drop (n - 1) m')
+                                      f (Emit _ m') = stepMealy i (drop (n - 1) m')
                                   in  stepMealy i m >>= f
 
 -- | Loop a machine forever.
@@ -195,7 +195,7 @@ collect = scanl (flip Cons) Nil
 
 -- | Creates a machine which emits a single value before halting.
 singleton :: forall f i o. Applicative f => o -> MealyT f i o
-singleton o = pureMealy $ \i -> Emit o halt
+singleton o = pureMealy $ \_ -> Emit o halt
 
 -- | Creates a machine which either emits a single value before halting
 -- | (for `Just`), or just halts (in the case of `Nothing`).
@@ -270,7 +270,7 @@ instance applyMealy :: Apply f => Apply (MealyT f i) where
     ap (Emit f' g) (Emit x' y) = Emit (f' x') (g <*> y)
 
 instance applicativeMealy :: Applicative f => Applicative (MealyT f i) where
-  pure t = pureMealy $ \s -> Emit t halt
+  pure t = pureMealy $ \_ -> Emit t halt
 
 instance profunctorMealy :: Functor f => Profunctor (MealyT f) where
   dimap l r = remap where

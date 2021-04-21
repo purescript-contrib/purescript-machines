@@ -26,6 +26,7 @@ module Data.Machine.Mealy
   , fromArray
   , msplit
   , interleave
+  , once
   , when
   , ifte
   , wrapEffect

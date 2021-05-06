@@ -7,10 +7,12 @@ Notable changes to this project are documented in this file. The format is based
 Breaking changes:
 
 New features:
+- Added `once` to the export list of `Data.Machine.Mealy` (#49 by @PureFunctor) 
 
 Bugfixes:
 
 Other improvements:
+- Removed unused names and exported unused declaration found by the v0.14.1 PureScript release (#49 by @PureFunctor)
 
 ## [v6.0.0](https://github.com/purescript-contrib/purescript-machines/releases/tag/v6.0.0) - 2021-02-26
 

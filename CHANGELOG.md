@@ -7,9 +7,15 @@ Notable changes to this project are documented in this file. The format is based
 Breaking changes:
 
 New features:
-- Added `once` to the export list of `Data.Machine.Mealy` (#49 by @PureFunctor) 
 
 Bugfixes:
+
+Other improvements:
+
+## [v6.1.0](https://github.com/purescript-contrib/purescript-machines/releases/tag/v6.1.0) - 2021-05-06
+
+New features:
+- Added `once` to the export list of `Data.Machine.Mealy` (#49 by @PureFunctor)
 
 Other improvements:
 - Removed unused names and exported unused declaration found by the v0.14.1 PureScript release (#49 by @PureFunctor)
@@ -19,10 +25,6 @@ Other improvements:
 Breaking changes:
 - Added support for PureScript 0.14 and dropped support for all previous versions (#46)
 - Removed the `MonadZero` instance, as the type class has been deprecated in PureScript 0.14. Use `Monad` + `Alternative` constraints instead. (#46)
-
-New features:
-
-Bugfixes:
 
 Other improvements:
 - Added @paluh as a maintainer and removed @garyb (#27)

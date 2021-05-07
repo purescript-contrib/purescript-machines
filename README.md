@@ -26,8 +26,6 @@ There are several ways to build machines. One way is to use `do` syntax,
 for example:
 
 ```purescript
-import Prelude
-
 import Control.MonadZero (guard)
 import Data.Machine.Mealy (MealyT, fromArray, toUnfoldable)
 import Data.Identity (Identity)
@@ -38,26 +36,22 @@ machine1 = do
   guard (number /= 0)
   let scaled = div number 2
   pure $ show scaled
+  
+result :: Array String
+result = toUnfoldable unit machine1
 ```
 
 This will create a machine `machine1` which goes through the "inputs"
 from the array. It then checks and halts on any zero input, and otherwise
 scales the inputs (by dividing by 2). The result is then transformed into a string.
 
-The resulting machine can be materialized via
-
-```purescript
-> toUnfoldable unit machine1 :: Array String
-["5","10","15","20","25"]
-```
+The resulting machine can be materialized via `toUnfoldable unit machine1 :: Array String`.
 
 Another way to write the same machine is using machine composition. In this example, we will be creating multiple machines using `pureMealy`, which relies on `Step`s.
 
 A `Step f i o` represents a state transition in the machine. When you run a machine you are executing a series of steps. At each step the machine can stop via the `Halt` constructor or `Emit` a value and construct the rest of the machine.
 
 ```purescript
-import Prelude
-
 import Data.Identity (Identity)
 import Data.Machine.Mealy (MealyT, Step(..), fromArray, pureMealy)
 

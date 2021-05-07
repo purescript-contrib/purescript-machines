@@ -13,5 +13,5 @@
   , "unfoldable"
   ]
 , packages = ./packages.dhall
-, sources = [ "src/**/*.purs", "test/**/*.purs" ]
+, sources = [ "src/**/*.purs", "test/**/*.purs", "doc-test/*.purs" ]
 }

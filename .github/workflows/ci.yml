@@ -32,3 +32,6 @@ jobs:
 
       - name: Run tests
         run: spago test --no-install
+
+      - name: Check docs
+        uses: colinwahl/purescript-doc-check-action@main

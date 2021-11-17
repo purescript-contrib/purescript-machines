@@ -159,12 +159,12 @@ take n m =
 drop :: forall f i o. Monad f => Int -> MealyT f i o -> MealyT f i o
 drop n m =
   if n <= 0 then m
-  else mealy $ \i ->
+  else mealy $ \i -> do
     let
       f Halt = pure Halt
       f (Emit _ m') = stepMealy i (drop (n - 1) m')
-    in
-      stepMealy i m >>= f
+
+    stepMealy i m >>= f
 
 -- | Loop a machine forever.
 loop :: forall f i o. Monad f => MealyT f i o -> MealyT f i o
@@ -197,12 +197,12 @@ zipWith f a b = f <$> a <*> b
 scanl :: forall f i a b. Functor f => (b -> a -> b) -> b -> MealyT f i a -> MealyT f i b
 scanl f = go
   where
-  go b m = mealy $ \i ->
+  go b m = mealy $ \i -> do
     let
       g Halt = Halt
       g (Emit o m') = (let b' = f b o in Emit b' (go b' m'))
-    in
-      g <$> stepMealy i m
+
+    g <$> stepMealy i m
 
 -- | Accumulates the outputs of a machine as a `List`.
 collect :: forall f i o. Functor f => MealyT f i o -> MealyT f i (List o)
@@ -221,13 +221,13 @@ fromMaybe (Just o) = singleton o
 -- | Creates a machine which emits all the values of the array before
 -- | halting.
 fromArray :: forall f i o. Monad f => Array o -> MealyT f i o
-fromArray o =
+fromArray o = do
   let
     len = length o
     go n | n < zero || n >= len = halt
     go n = fromMaybe (o !! n) <> go (n + one)
-  in
-    go zero
+
+  go zero
 
 -- | Creates a machine which wraps an effectful computation and ignores
 -- | its input.
@@ -301,23 +301,23 @@ instance profunctorMealy :: Functor f => Profunctor (MealyT f) where
       g Halt = Halt
 
 instance strongMealy :: Functor f => Strong (MealyT f) where
-  first m = mealy $ \s ->
+  first m = mealy $ \s -> do
     let
       b = fst s
       d = snd s
       g (Emit c f') = Emit (Tuple c d) (first f')
       g Halt = Halt
-    in
-      g <$> stepMealy b m
+
+    g <$> stepMealy b m
   second = dimap swap swap <<< first
 
 instance semigroupMealy :: Monad f => Semigroup (MealyT f i o) where
-  append l r = mealy $ \i ->
+  append l r = mealy $ \i -> do
     let
       g (Emit c l') = pure $ Emit c (l' <> r)
       g Halt = stepMealy i r
-    in
-      stepMealy i l >>= g
+
+    stepMealy i l >>= g
 
 instance monoidMealy :: Monad f => Monoid (MealyT f i o) where
   mempty = mealy $ \_ -> pure Halt
@@ -336,25 +336,25 @@ instance categoryMealy :: Monad f => Category (MealyT f) where
   identity = pureMealy $ \t -> Emit t halt
 
 instance bindMealy :: Monad f => Bind (MealyT f i) where
-  bind m f = mealy $ \i ->
+  bind m f = mealy $ \i -> do
     let
       g (Emit o m') = h <$> stepMealy i (f o)
         where
         h (Emit b bi) = Emit b (bi <> (m' >>= f))
         h Halt = Halt
       g Halt = pure Halt
-    in
-      stepMealy i m >>= g
+
+    stepMealy i m >>= g
 
 instance monadMealy :: Monad f => Monad (MealyT f i)
 
 instance altMealy :: Monad f => Alt (MealyT f i) where
-  alt x y = mealy $ \i ->
+  alt x y = mealy $ \i -> do
     let
       f Halt = stepMealy i y
       f (Emit o m') = pure $ Emit o m'
-    in
-      stepMealy i x >>= f
+
+    stepMealy i x >>= f
 
 instance plusMealy :: Monad f => Plus (MealyT f i) where
   empty = halt

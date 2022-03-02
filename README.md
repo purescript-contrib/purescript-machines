@@ -3,7 +3,6 @@
 [![CI](https://github.com/purescript-contrib/purescript-machines/workflows/CI/badge.svg?branch=main)](https://github.com/purescript-contrib/purescript-machines/actions?query=workflow%3ACI+branch%3Amain)
 [![Release](http://img.shields.io/github/release/purescript-contrib/purescript-machines.svg)](https://github.com/purescript-contrib/purescript-machines/releases)
 [![Pursuit](http://pursuit.purescript.org/packages/purescript-machines/badge)](http://pursuit.purescript.org/packages/purescript-machines)
-[![Maintainer: thomashoneyman](https://img.shields.io/badge/maintainer-thomashoneyman-teal.svg)](http://github.com/thomashoneyman)
 [![Maintainer: paluh](https://img.shields.io/badge/maintainer-paluh-teal.svg)](http://github.com/paluh)
 
 Machines is a library for building finite state machines. Finite state machines are useful for modeling many concerns that developers face. They help you describe a set of possible states and rules for how to transition from one state to another. The result is a complete view of possible states and transitions between states.

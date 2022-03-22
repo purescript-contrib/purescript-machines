@@ -8,7 +8,6 @@
   , "maybe"
   , "prelude"
   , "profunctor"
-  , "psci-support"
   , "tuples"
   , "unfoldable"
   ]

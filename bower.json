@@ -10,17 +10,17 @@
   },
   "license": "MIT",
   "dependencies": {
-    "purescript-arrays": "master",
-    "purescript-control": "master",
-    "purescript-effect": "master",
-    "purescript-lists": "master",
-    "purescript-maybe": "master",
-    "purescript-prelude": "master",
-    "purescript-profunctor": "master",
-    "purescript-tuples": "master",
-    "purescript-unfoldable": "master"
+    "purescript-arrays": "^7.0.0",
+    "purescript-control": "^6.0.0",
+    "purescript-effect": "^4.0.0",
+    "purescript-lists": "^7.0.0",
+    "purescript-maybe": "^6.0.0",
+    "purescript-prelude": "^6.0.0",
+    "purescript-profunctor": "^6.0.0",
+    "purescript-tuples": "^7.0.0",
+    "purescript-unfoldable": "^6.0.0"
   },
   "devDependencies": {
-    "purescript-console": "master"
+    "purescript-console": "^6.0.0"
   }
 }

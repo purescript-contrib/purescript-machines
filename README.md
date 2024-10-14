@@ -81,11 +81,11 @@ machine2 =
 This machine does the same thing, except it creates multiple machines:
 
 - `fromArray [10, 20 ...` is a `MealyT Identity Unit Int` which generates
-    the integerers in the provided array,
+  the integerers in the provided array,
 - `pureMealy haltOn0` is a `MealyT Int Int` which halts on 0,
 - `pureMealy scale` is a `MealyT Int Int` which scales the inputs, and
 - `pureMealy pretty` is a `MealyT Int String` which converts inputs
-    from integers to strings.
+  from integers to strings.
 
 ## Documentation
 

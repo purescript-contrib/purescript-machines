@@ -11,6 +11,7 @@ New features:
 Bugfixes:
 
 Other improvements:
+- Migrate to registry-backed Spago 1.0 and update CI tooling.
 
 ## [v7.0.0](https://github.com/purescript-contrib/purescript-machines/releases/tag/v7.0.0) - 2022-04-27
 
